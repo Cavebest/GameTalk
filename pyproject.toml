@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gametalk"
+version = "0.1.0"
+description = "GameTalk Translator - push-to-talk Arabic speech to English overlay for gamers"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Shkour Bashtawi" }]
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+    "faster-whisper>=1.1",
+    "PySide6-Essentials>=6.8",
+    "sounddevice>=0.5",
+    "numpy>=1.26",
+    "httpx>=0.27",  # Azure REST calls (already pulled in by faster-whisper's huggingface_hub)
+    "azure-cognitiveservices-speech>=1.40",  # only for Azure Speech phrase lists (2.4 MB)
+    "cmudict>=1.0",  # pronunciation helper: offline English pronunciation dictionary (0.9 MB)
+    "soundcard>=0.4",  # teammate subtitles: Windows loopback capture of the PC's output (44 KB)
+    "sentencepiece>=0.2",  # tokenizer for the offline English->Arabic model (1 MB)
+]
+
+[project.urls]
+Homepage = "https://github.com/ShkourBashtawi"
+
+[project.optional-dependencies]
+# CUDA 12 cuBLAS for ctranslate2 so no CUDA toolkit install is needed. cuDNN is not required:
+# measured identical output/speed without it (and it would add a 1.1 GB download).
+cuda = ["nvidia-cublas-cu12"]
+dev = ["pytest>=8", "ruff>=0.6"]
+build = ["pyinstaller>=6"]
+
+[project.gui-scripts]
+gametalk = "gametalk.__main__:main"
+gametalk-launcher = "gametalk.launcher:main"
+
+[tool.setuptools]
+packages = ["gametalk"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"gametalk/i18n_ar.py" = ["E501"]  # translation table: long natural-language strings
+"gametalk/help.py" = ["E501"]  # bilingual help prose
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

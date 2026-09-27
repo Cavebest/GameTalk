@@ -37,6 +37,7 @@ def test_usage_file_holds_no_content(tmp_path):
         "speech_seconds",
         "translator_chars",
         "google_chars",
+        "google_speech_seconds",
         "warned_speech",
         "warned_translator",
         "warned_google",

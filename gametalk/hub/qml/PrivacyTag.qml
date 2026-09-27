@@ -10,6 +10,7 @@ Rectangle {
     readonly property string service: profile.translation_provider === "google" ? "Google" : "Azure"
     readonly property string label: local ? hub.t("Nothing leaves this PC")
         : profile.speech_provider === "azure" ? hub.t("Voice clip goes to Azure Speech")
+        : profile.speech_provider === "google" ? hub.t("Voice clip goes to Google Chirp 3")
         : hub.tf("Only the text goes to {service}", {service: service})
     implicitHeight: 26
     implicitWidth: row.implicitWidth + 20

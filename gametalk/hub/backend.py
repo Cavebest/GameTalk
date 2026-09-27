@@ -617,4 +617,5 @@ class Hub(QObject):
         from ..google import check_connection
 
         creds = self.c.google_credentials()
-        self._run_test("google", lambda: check_connection(creds))
+        speech = self.c.profile.speech_provider == "google"
+        self._run_test("google", lambda: check_connection(creds, speech=speech))

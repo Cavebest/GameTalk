@@ -240,9 +240,9 @@ class _Worker(QObject):
         if self.cancelled.is_set():
             return
         try:
-            if not cfg.model:  # Azure Speech mode: free the GPU/RAM Whisper would hold
+            if not cfg.model:  # cloud speech (Azure or Google): free the GPU/RAM Whisper holds
                 self.backend.unload()
-                self.backend.summary = "Azure Speech (cloud)"
+                self.backend.summary = "Cloud speech (no local model)"
                 self.ready.emit(cfg, self.backend.summary, "")
                 return
             note = self.backend.load(cfg, self.status.emit)

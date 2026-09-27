@@ -35,6 +35,7 @@ class MonthUsage:
     speech_seconds: float = 0.0
     translator_chars: int = 0
     google_chars: int = 0
+    google_speech_seconds: float = 0.0  # Chirp 3 has no free tier: shown as minutes and cost
     warned_speech: float = 0.0  # highest warning level already shown (0, 0.8, 1.0)
     warned_translator: float = 0.0
     warned_google: float = 0.0
@@ -70,6 +71,7 @@ class UsageTracker:
                     speech_seconds=float(data.get("speech_seconds", 0)),
                     translator_chars=int(data.get("translator_chars", 0)),
                     google_chars=int(data.get("google_chars", 0)),
+                    google_speech_seconds=float(data.get("google_speech_seconds", 0)),
                     warned_speech=float(data.get("warned_speech", 0)),
                     warned_translator=float(data.get("warned_translator", 0)),
                     warned_google=float(data.get("warned_google", 0)),
@@ -85,16 +87,21 @@ class UsageTracker:
             self._dirty = True
 
     def add(
-        self, speech_seconds: float = 0.0, translator_chars: int = 0, google_chars: int = 0
+        self,
+        speech_seconds: float = 0.0,
+        translator_chars: int = 0,
+        google_chars: int = 0,
+        google_speech_seconds: float = 0.0,
     ) -> list[str]:
         """Record usage; returns warning keys that just crossed a threshold."""
-        if not speech_seconds and not translator_chars and not google_chars:
+        if not (speech_seconds or translator_chars or google_chars or google_speech_seconds):
             return []
         self._roll_month()
         u = self.current
         u.speech_seconds += max(0.0, speech_seconds)
         u.translator_chars += max(0, translator_chars)
         u.google_chars += max(0, google_chars)
+        u.google_speech_seconds += max(0.0, google_speech_seconds)
         self._dirty = True
         warnings = []
         for level in WARN_AT:

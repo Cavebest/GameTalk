@@ -20,7 +20,8 @@ ScrollPage {
         : phase === "idle" ? Theme.ok
         : Theme.accent
     readonly property string hotkey: st.hotkey || prof.hotkey
-    readonly property string speechName: prof.speech_provider === "azure" ? "Azure Speech" : "Whisper " + prof.model
+    readonly property string speechName: prof.speech_provider === "azure" ? "Azure Speech"
+        : prof.speech_provider === "google" ? "Google Chirp 3" : "Whisper " + prof.model
     readonly property string translatorName: prof.translation_provider === "azure" ? "Azure Translator"
         : prof.translation_provider === "google" ? "Google Translate" : "Whisper"
 
@@ -161,6 +162,43 @@ ScrollPage {
             Layout.fillWidth: true
             LayoutMirroring.enabled: false
         }
+        Flow {  // how long each stage took, to compare engines
+            Layout.fillWidth: true
+            spacing: 8
+            visible: !!(page.st.timings && page.st.timings.total)
+            Repeater {
+                model: {
+                    var t = page.st.timings || {}
+                    var out = []
+                    if (t.speech !== undefined) out.push({label: hub.t("Speech → text"), v: t.speech})
+                    if (t.translate !== undefined) out.push({label: hub.t("Translation"), v: t.translate})
+                    if (t.total !== undefined) out.push({label: hub.t("Total"), v: t.total, strong: true})
+                    return out
+                }
+                delegate: Rectangle {
+                    required property var modelData
+                    height: 26
+                    width: chipRow.implicitWidth + 20
+                    radius: 13
+                    color: modelData.strong ? Theme.accentSoft : Theme.surface2
+                    border.width: 1
+                    border.color: modelData.strong ? Theme.accent : Theme.border
+                    Row {
+                        id: chipRow
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Text { text: modelData.label; color: Theme.muted; font.pixelSize: 11 }
+                        Text {
+                            text: modelData.v.toFixed(2) + " " + hub.t("s")
+                            color: modelData.strong ? Theme.accent : Theme.text
+                            font.pixelSize: 11
+                            font.weight: Font.Bold
+                            font.family: Theme.mono
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // ---- live numbers -------------------------------------------------------------------------
@@ -232,7 +270,7 @@ ScrollPage {
                 Layout.fillWidth: true
             }
             Text {
-                text: (page.st.engine || hub.t("not loaded")) + "  ·  " + page.translatorName
+                text: (page.st.engine ? hub.t(page.st.engine) : hub.t("not loaded")) + "  ·  " + page.translatorName
                 color: Theme.muted
                 font.pixelSize: 12
                 elide: Text.ElideRight
@@ -261,7 +299,7 @@ ScrollPage {
             Layout.fillWidth: true
             nodes: [
                 {icon: Icons.mic, title: hub.t("Your voice"), sub: page.hotkey},
-                {icon: page.prof.speech_provider === "azure" ? Icons.cloud : Icons.pc, title: page.speechName, sub: hub.t("speech → text")},
+                {icon: page.prof.speech_provider !== "whisper-local" ? Icons.cloud : Icons.pc, title: page.speechName, sub: hub.t("speech → text")},
                 {icon: page.prof.translation_provider === "whisper-local" ? Icons.pc : Icons.cloud, title: page.translatorName, sub: hub.t("text → English")},
                 {icon: Icons.overlay, title: hub.t("On screen"), sub: hub.t("over your game")}
             ]

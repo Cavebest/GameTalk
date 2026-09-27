@@ -88,6 +88,7 @@ def snapshot(c) -> dict:
         or (tm.enabled and "azure" in (tm.recognizer, tm.translator))
         or (f.quick_text_enabled and f.quick_text_translator == "azure"),
         "creds": c.azure_credentials(),
+        "google_speech": p.speech_provider == "google",
         "google_needed": p.uses_google
         or (tm.enabled and tm.translator == "google")
         or (f.quick_text_enabled and c._text_translator() == "google"),
@@ -253,7 +254,7 @@ def run_checks(s: dict, open_mic=None) -> list[Check]:
     if s.get("google_needed"):
         from .google import check_connection as check_google
 
-        for ok, msg in check_google(s["google_creds"]):
+        for ok, msg in check_google(s["google_creds"], speech=s.get("google_speech", False)):
             head, sep, rest = msg.partition(" (")
             out.append(
                 Check(

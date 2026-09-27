@@ -137,7 +137,7 @@ You choose the two steps **separately** on the **Engines** page:
 
 | Step | On this PC (free, private) | Cloud (optional) |
 |---|---|---|
-| **1. Speech → text** | Whisper `tiny` → `large-v3`, on GPU (CUDA) or CPU | **Azure Speech**: 17 Arabic dialects (ar-SA, ar-JO, ar-EG, …) |
+| **1. Speech → text** | Whisper `tiny` → `large-v3`, on GPU (CUDA) or CPU | **Azure Speech**: 17 Arabic dialects (ar-SA, ar-JO, ar-EG, …) · **Google Chirp 3**: Arabic dialects (preview) with built-in noise removal |
 | **2. Text → translation** | Whisper translates straight from your voice to English | **Azure Translator** or **Google Translate** (Standard or Translation LLM): English or 14 other languages |
 
 <a id="en-install"></a>
@@ -290,6 +290,11 @@ One *Azure AI services* multi-service resource also works: use the same key and 
 4. In GameTalk, open **Cloud keys**, paste the key, choose **Standard** or **Translation LLM**,
    and press **Test Google**. The LLM also needs your **Project ID**, which is on the Cloud
    console home page.
+5. **Google Chirp 3 (speech → text):** also enable the **Cloud Speech-to-Text API**, enter your
+   **Project ID**, then pick *Google Chirp 3* on **Engines**. It costs about $0.016 per minute of
+   speech (no free minutes; new Google Cloud accounts get trial credit). The *Noise removal*
+   switch strips game sound from your mic. **Home** shows how long each stage took (speech →
+   text, translation, total), so you can compare engines.
 
 The first 500,000 characters each month are free, about 16,000 short sentences, which is more
 than enough for gaming. GameTalk counts your usage for all three services and warns at 80% and
@@ -300,6 +305,7 @@ than enough for gaming. GameTalk counts your usage for all three services and wa
 | Whisper + Whisper | Nothing |
 | Whisper + Azure Translator / Google | The recognised **text** only |
 | Azure Speech + Azure Translator / Google | Your push-to-talk **audio** (silence trimmed) to Azure, then the text |
+| Google Chirp 3 + Azure Translator / Google | Your push-to-talk **audio** (silence trimmed) to Google, then the text |
 
 <a id="en-features"></a>
 
@@ -594,7 +600,7 @@ flowchart LR
 
 | الخطوة | على جهازك (مجاني وخاص) | سحابي (اختياري) |
 |---|---|---|
-| **1. الكلام ← نص** | Whisper من `tiny` لـ `large-v3`، على كرت الشاشة أو المعالج | **Azure Speech**: 17 لهجة عربية (ar-SA، ar-JO، ar-EG، …) |
+| **1. الكلام ← نص** | Whisper من `tiny` لـ `large-v3`، على كرت الشاشة أو المعالج | **Azure Speech**: 17 لهجة عربية (ar-SA، ar-JO، ar-EG، …) · **Google Chirp 3**: لهجات عربية (تجريبي) مع مزيل ضجيج مدمج |
 | **2. النص ← ترجمة** | Whisper بيترجم من صوتك للإنجليزي مباشرة | **Azure Translator** أو **Google Translate** (العادي أو Translation LLM): إنجليزي أو 14 لغة ثانية |
 
 <a id="ar-install"></a>
@@ -719,6 +725,11 @@ NVIDIA إذا لقاه)، وبعدها بيفتح النافذة الرئيسي�
 4. بـ GameTalk افتح **مفاتيح السحابة**، الصق المفتاح، اختار **العادي** أو **Translation LLM**،
    واضغط **اختبار Google**. موديل LLM بده كمان **رقم المشروع (Project ID)**، وتلاقيه بالصفحة
    الرئيسية للـ Cloud console.
+5. **Google Chirp 3 (الكلام ← نص):** فعّل كمان **Cloud Speech-to-Text API**، حط **رقم المشروع**،
+   وبعدين اختار *Google Chirp 3* من صفحة **المحركات**. سعره تقريباً 0.016$ لكل دقيقة كلام (ما في
+   دقائق مجانية، بس حسابات Google Cloud الجديدة بتاخذ رصيد تجربة). مفتاح *إزالة الضجيج* بيشيل صوت
+   اللعبة من المايك. والصفحة **الرئيسية** بتوريك قديش أخذت كل مرحلة (كلام ← نص، ترجمة، المجموع)،
+   لتقارن بين المحركات.
 
 أول 500 ألف حرف كل شهر مجانية، يعني تقريباً 16 ألف جملة قصيرة، وهاد أكثر من كافي للعب. البرنامج
 بيعدّ استهلاكك للخدمات الثلاث وبينبّهك عند 80% و100%.
@@ -728,6 +739,7 @@ NVIDIA إذا لقاه)، وبعدها بيفتح النافذة الرئيسي�
 | Whisper + Whisper | ولا شي |
 | Whisper + Azure Translator / Google | **النص** المفهوم بس |
 | Azure Speech + Azure Translator / Google | **صوتك** وقت الضغط (بعد قص الصمت) لـ Azure، وبعدين النص |
+| Google Chirp 3 + Azure Translator / Google | **صوتك** وقت الضغط (بعد قص الصمت) لـ Google، وبعدين النص |
 
 <a id="ar-features"></a>
 

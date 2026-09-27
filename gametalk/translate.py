@@ -10,7 +10,8 @@ Speech -> text and text -> translation are picked separately per profile:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, field
 from typing import Protocol
 
 import numpy as np
@@ -78,6 +79,8 @@ class TranslationResult:
     azure_audio_seconds: float = 0.0  # usage counters (amounts only, never content)
     azure_chars: int = 0
     google_chars: int = 0
+    google_speech_seconds: float = 0.0
+    timings: dict = field(default_factory=dict)  # seconds per stage: speech, translate
 
 
 class SpeechBackend(Protocol):
@@ -215,28 +218,43 @@ def run_pipeline(
         raise PipelineError("Add your Azure keys on the Cloud keys page.")
     if req.translation_provider == "google" and google is None:
         raise PipelineError(GOOGLE_KEY_MISSING)
-    if req.speech_provider != "azure" and whisper is None:
+    if req.speech_provider == "google" and google is None:
+        raise PipelineError(GOOGLE_KEY_MISSING)
+    if req.speech_provider == "whisper-local" and whisper is None:
         raise PipelineError("Speech model isn't loaded.")
 
     if req.speech_provider == "whisper-local" and req.translation_provider == "whisper-local":
-        return _whisper_translate(whisper, audio, req)
+        t0 = time.perf_counter()
+        result = _whisper_translate(whisper, audio, req)
+        result.timings = {"speech": round(time.perf_counter() - t0, 3)}
+        return result
 
     # Two-stage routes: speech -> source text -> Azure Translator / Google.
-    if req.speech_provider == "azure":
+    t0 = time.perf_counter()
+    azure_seconds = google_seconds = 0.0
+    if req.speech_provider in ("azure", "google"):
         if req.trim_silence:
             audio = trim_silence(audio)  # upload only the part with speech in it
             if audio.size == 0:
-                return TranslationResult(text="")  # only silence: don't call Azure at all
-        source = cloud.recognize(audio, req.azure_locale, req.phrases)
-        azure_seconds = audio.size / 16000
+                return TranslationResult(text="")  # only silence: don't call the cloud at all
+        if req.speech_provider == "google":
+            source = google.recognize(audio, req.azure_locale, req.phrases)
+            google_seconds = audio.size / 16000
+        else:
+            source = cloud.recognize(audio, req.azure_locale, req.phrases)
+            azure_seconds = audio.size / 16000
         detected = req.azure_locale.split("-")[0]
     else:
-        azure_seconds = 0.0
         source, detected = whisper.decode(audio, "transcribe", req.language, None)
+    timings = {"speech": round(time.perf_counter() - t0, 3)}
     source = " ".join(source.split())
     if not source or is_hallucination(source):
         return TranslationResult(
-            text="", detected_language=detected, azure_audio_seconds=azure_seconds
+            text="",
+            detected_language=detected,
+            azure_audio_seconds=azure_seconds,
+            google_speech_seconds=google_seconds,
+            timings=timings,
         )
     shown_source = source
     source = apply_corrections(source, req.source_corrections)
@@ -246,9 +264,11 @@ def run_pipeline(
     if src_lang == target.split("-")[0]:
         text = source  # already in the target language
     else:
+        t1 = time.perf_counter()
         translator = google if req.translation_provider == "google" else cloud
         text = translator.translate(source, src_lang, target)
         usage = _usage(req.translation_provider, source, text, google)
+        timings["translate"] = round(time.perf_counter() - t1, 3)
     text = clean_output(text, req.gaming_mode)
     if is_hallucination(text):
         text = ""
@@ -259,6 +279,8 @@ def run_pipeline(
         detected_language=detected,
         pronunciation=pron,
         azure_audio_seconds=azure_seconds,
+        google_speech_seconds=google_seconds,
+        timings=timings,
         **usage,
     )
 

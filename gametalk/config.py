@@ -22,6 +22,7 @@ GOOGLE = "google"
 SPEECH_PROVIDERS = {
     LOCAL: "Whisper (local, offline)",
     AZURE: "Azure Speech (cloud, most accurate)",
+    GOOGLE: "Google Chirp 3 (cloud)",
 }
 TRANSLATION_PROVIDERS = {
     LOCAL: "Whisper (local, speech → English)",
@@ -262,7 +263,7 @@ class Profile:
 
     @property
     def uses_google(self) -> bool:
-        return self.translation_provider == GOOGLE
+        return GOOGLE in (self.speech_provider, self.translation_provider)
 
     @property
     def mode(self) -> str:
@@ -291,6 +292,7 @@ class GoogleSettings:
     project_id: str = ""  # only needed for the Translation LLM model
     model: str = "nmt"  # "nmt" | "llm"
     location: str = "us-central1"
+    denoise: bool = True  # Chirp 3 noise reduction: removes game sound from your mic
 
 
 @dataclass
@@ -462,8 +464,8 @@ def validate(settings: Settings) -> Settings:
             p.speech_provider = LOCAL
         if p.translation_provider not in TRANSLATION_PROVIDERS:
             p.translation_provider = LOCAL
-        if p.speech_provider == AZURE and p.translation_provider == LOCAL:
-            p.translation_provider = AZURE  # Whisper can't translate text
+        if p.speech_provider in (AZURE, GOOGLE) and p.translation_provider == LOCAL:
+            p.translation_provider = p.speech_provider  # Whisper can't translate text
         if p.azure_locale not in AZURE_LOCALES:
             p.azure_locale = "ar-SA"
         if p.target_language not in TARGET_LANGUAGES or p.translation_provider == LOCAL:

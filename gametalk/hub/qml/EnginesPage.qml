@@ -11,10 +11,13 @@ ScrollPage {
     readonly property var cfg: hub.config
     readonly property var prof: cfg.profile
     readonly property bool azureSpeech: prof.speech_provider === "azure"
+    readonly property bool googleSpeech: prof.speech_provider === "google"
+    readonly property bool cloudSpeech: azureSpeech || googleSpeech
     readonly property string tp: prof.translation_provider
     readonly property bool cloudTranslate: tp === "azure" || tp === "google"
     readonly property string missing: {
         if (azureSpeech && !(cfg.azure.speech_key && cfg.azure.speech_region)) return hub.t("Azure Speech needs its key and region.")
+        if (googleSpeech && !(cfg.google.api_key && cfg.google.project_id)) return hub.t("Google Chirp 3 needs your Google API key and project ID.")
         if (tp === "azure" && !cfg.azure.translator_key) return hub.t("Azure Translator needs its key.")
         if (tp === "google" && !cfg.google.api_key) return hub.t("Google Translate needs an API key.")
         if (tp === "google" && cfg.google.model === "llm" && !cfg.google.project_id) return hub.t("The Translation LLM needs your Google Cloud project ID.")
@@ -53,7 +56,7 @@ ScrollPage {
             title: hub.t("Whisper — on this PC")
             desc: hub.t("Free and private. Runs on your GPU or CPU and works offline.")
             badges: [{text: hub.t("Free"), tone: "ok"}, {text: hub.t("Offline"), tone: "ok"}]
-            selected: !page.azureSpeech
+            selected: !page.cloudSpeech
             onChosen: hub.set("profile.speech_provider", "whisper-local")
         }
         ChoiceCard {
@@ -67,11 +70,22 @@ ScrollPage {
             selected: page.azureSpeech
             onChosen: hub.set("profile.speech_provider", "azure")
         }
+        ChoiceCard {
+            Layout.fillWidth: true
+            Layout.preferredWidth: 1
+            Layout.fillHeight: true
+            icon: Icons.wave
+            title: "Google Chirp 3"
+            desc: hub.t("Google's newest speech model: Arabic dialects (preview) and built-in noise removal. About $0.016 a minute.")
+            badges: [{text: hub.t("Cloud"), tone: "cloud"}, {text: hub.t("New"), tone: "new"}]
+            selected: page.googleSpeech
+            onChosen: hub.set("profile.speech_provider", "google")
+        }
     }
     Card {
         Layout.fillWidth: true
         SettingRow {
-            visible: !page.azureSpeech
+            visible: !page.cloudSpeech
             icon: Icons.engine
             title: hub.t("Whisper model")
             desc: hub.t("Bigger models understand dialects better but need more memory. Downloads once.")
@@ -84,7 +98,7 @@ ScrollPage {
             }
         }
         SettingRow {
-            visible: !page.azureSpeech
+            visible: !page.cloudSpeech
             icon: Icons.bolt
             title: hub.t("Run on")
             desc: hub.t("Auto uses your NVIDIA GPU when available and falls back to the CPU.")
@@ -96,7 +110,7 @@ ScrollPage {
             }
         }
         SettingRow {
-            visible: !page.azureSpeech
+            visible: !page.cloudSpeech
             icon: Icons.language
             title: hub.t("Spoken language")
             desc: hub.t("The language you speak. Auto-detect is slower and can guess wrong on short sentences.")
@@ -120,16 +134,23 @@ ScrollPage {
             Toggle { checked: page.cfg.show_arabic; onToggled: function(on) { hub.set("show_arabic", on) } }
         }
         SettingRow {
-            visible: page.azureSpeech
+            visible: page.cloudSpeech
             icon: Icons.globe
             title: hub.t("Your dialect")
-            desc: hub.t("Azure understands you best when it knows your dialect.")
+            desc: hub.t("Cloud engines understand you best when they know your dialect.")
             Dropdown {
                 width: 260
                 items: hub.options("locales")
                 current: page.prof.azure_locale
                 onPicked: function(v) { hub.set("profile.azure_locale", v) }
             }
+        }
+        SettingRow {
+            visible: page.googleSpeech
+            icon: Icons.sparkle
+            title: hub.t("Noise removal")
+            desc: hub.t("Chirp 3 removes game sound and music from your mic before it listens.")
+            Toggle { checked: page.cfg.google.denoise; onToggled: function(on) { hub.set("google.denoise", on) } }
         }
     }
 
@@ -145,8 +166,8 @@ ScrollPage {
             icon: Icons.pc
             title: hub.t("Whisper — on this PC")
             desc: hub.t("Translates straight from your voice to English. Free and offline.")
-            lockedNote: hub.t("Whisper can only translate from your voice, not from Azure's text.")
-            enabled: !page.azureSpeech
+            lockedNote: hub.t("Whisper can only translate from your voice, not from a cloud engine's text.")
+            enabled: !page.cloudSpeech
             badges: [{text: hub.t("Free"), tone: "ok"}]
             selected: page.tp === "whisper-local"
             onChosen: hub.set("profile.translation_provider", "whisper-local")

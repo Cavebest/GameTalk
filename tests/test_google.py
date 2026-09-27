@@ -218,3 +218,119 @@ def test_send_audio_attaches_google_credentials(qapp, tmp_path):
     job = c.speech.jobs[-1]
     assert job.google is not None and job.google.api_key == "gk"
     assert job.azure is None
+
+
+# ---------------------------------------------------------------- Chirp 3 (speech)
+
+CHIRP = GoogleCredentials("gk", project_id="my-proj")
+
+
+def test_chirp_request_shape_and_result():
+    import base64
+
+    seen = {}
+
+    def handler(request):
+        seen["url"] = str(request.url)
+        seen["key"] = request.headers["X-goog-api-key"]
+        seen["body"] = json.loads(request.content)
+        return httpx.Response(
+            200,
+            json={
+                "results": [
+                    {"alternatives": [{"transcript": " خليكم "}]},
+                    {"alternatives": [{"transcript": "وراي"}]},
+                ]
+            },
+        )
+
+    text = client_with(handler, CHIRP).recognize(
+        np.zeros(1600, np.float32), "ar-JO", phrases=("Medic", "Flank")
+    )
+    assert text == "خليكم وراي"
+    assert seen["url"] == (
+        "https://us-speech.googleapis.com/v2/projects/my-proj/locations/us/recognizers/_:recognize"
+    )
+    assert seen["key"] == "gk" and "gk" not in seen["url"]
+    cfg = seen["body"]["config"]
+    assert cfg["model"] == "chirp_3" and cfg["languageCodes"] == ["ar-JO"]
+    assert cfg["denoiserConfig"]["denoiseAudio"] is True
+    phrases = cfg["adaptation"]["phraseSets"][0]["inlinePhraseSet"]["phrases"]
+    assert [p["value"] for p in phrases] == ["Medic", "Flank"]
+    assert base64.b64decode(seen["body"]["content"])[:4] == b"RIFF"
+
+
+def test_chirp_locale_fallback_and_options():
+    from gametalk.google import chirp_locale
+
+    assert chirp_locale("ar-PS") == "ar-PS"
+    assert chirp_locale("ar-IQ") == "ar-XA"  # not in Chirp 3's list: generic Arabic
+    seen = {}
+
+    def handler(request):
+        seen["body"] = json.loads(request.content)
+        return httpx.Response(200, json={})  # nothing heard
+
+    quiet = GoogleCredentials("gk", project_id="p", denoise=False)
+    assert client_with(handler, quiet).recognize(np.zeros(160, np.float32), "ar-SA") == ""
+    assert "denoiserConfig" not in seen["body"]["config"]
+    assert "adaptation" not in seen["body"]["config"]
+
+
+@pytest.mark.parametrize(
+    ("status", "message", "expected"),
+    [
+        (401, "API keys are not supported by this API. Expected OAuth2 access token", "API keys"),
+        (403, "Cloud Speech-to-Text API has not been used in project 1", "enable"),
+        (400, "The language ar-XX is not supported", "dialect"),
+    ],
+)
+def test_chirp_errors_are_explained(status, message, expected):
+    c = client_with(lambda r: httpx.Response(status, json={"error": {"message": message}}), CHIRP)
+    with pytest.raises(GoogleError, match=expected):
+        c.recognize(np.zeros(160, np.float32), "ar-JO")
+
+
+def test_chirp_needs_project_id():
+    with pytest.raises(GoogleError, match="project ID"):
+        client_with(lambda r: reply(), NMT).recognize(np.zeros(160, np.float32), "ar-JO")
+
+
+def test_chirp_then_google_translate_with_stage_timings():
+    class FakeChirp(FakeGoogle):
+        def recognize(self, audio, locale, phrases=()):
+            self.calls.append(("recognize", locale, phrases))
+            return "خليكم وراي"
+
+    g = FakeChirp(translated="Stay behind me")
+    req = TranslationRequest(
+        language="ar",
+        speech_provider=GOOGLE,
+        translation_provider=GOOGLE,
+        azure_locale="ar-JO",
+        phrases=("Medic",),
+    )
+    result = run_pipeline(SPEECH, req, None, None, google=g)
+    assert result.text == "Stay behind me."
+    assert g.calls[0] == ("recognize", "ar-JO", ("Medic",))
+    assert result.google_speech_seconds > 0
+    assert set(result.timings) == {"speech", "translate"}
+
+
+def test_config_google_speech_forces_a_text_translator():
+    s = Settings()
+    s.profile.speech_provider = GOOGLE
+    s.profile.translation_provider = "whisper-local"
+    validate(s)
+    assert s.profile.translation_provider == GOOGLE  # Whisper can't translate text
+    assert s.profile.uses_google and not s.profile.uses_whisper
+
+
+def test_check_connection_can_include_chirp():
+    def handler(request):
+        if "speech" in str(request.url):
+            return httpx.Response(200, json={})
+        return reply("Hello")
+
+    out = check_connection(CHIRP, transport=httpx.MockTransport(handler), speech=True)
+    assert out[0][0] and out[1][0] and out[1][1].startswith("Google Chirp 3: connected (")

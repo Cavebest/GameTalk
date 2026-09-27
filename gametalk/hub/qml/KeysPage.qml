@@ -112,7 +112,7 @@ ScrollPage {
             Layout.fillWidth: true
         }
         RegionField {
-            visible: page.cfg.google.model === "llm"
+            visible: page.cfg.google.model === "llm" || page.cfg.profile.speech_provider === "google"
             title: hub.t("Project ID")
             path: "google.project_id"
             value: page.cfg.google.project_id
@@ -169,6 +169,17 @@ ScrollPage {
                         Behavior on width { NumberAnimation { duration: 700; easing.type: Easing.OutCubic } }
                     }
                 }
+            }
+        }
+        RowLayout {
+            Layout.fillWidth: true
+            visible: ((hub.stats.usage || {}).googleSpeechMinutes || 0) > 0
+            Text { text: "Google Chirp 3"; color: Theme.text; font.pixelSize: 13; Layout.fillWidth: true }
+            Text {
+                readonly property real minutes: (hub.stats.usage || {}).googleSpeechMinutes || 0
+                text: hub.tf("{min} min · about ${cost}", {min: minutes.toFixed(1), cost: (minutes * 0.016).toFixed(2)})
+                color: Theme.muted
+                font.pixelSize: 12
             }
         }
         SettingRow {

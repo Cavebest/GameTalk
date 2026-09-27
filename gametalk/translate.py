@@ -1,10 +1,10 @@
 # Copyright (c) 2026 Shkour Bashtawi (github.com/ShkourBashtawi). MIT License.
 """Speech -> translated text pipeline and gaming-mode output shaping.
 
-Three routes, picked per profile:
-  local  : Whisper translate task (speech -> English in one local pass, nothing leaves the PC)
-  hybrid : Whisper transcribe (local) -> Azure Translator (only text is sent)
-  azure  : Azure Speech (audio is sent) -> Azure Translator
+Speech -> text and text -> translation are picked separately per profile:
+  Whisper + Whisper : translate task (speech -> English in one local pass, nothing leaves the PC)
+  Whisper + cloud   : Whisper transcribe (local) -> Azure Translator or Google (only text is sent)
+  Azure + cloud     : Azure Speech (audio is sent) -> Azure Translator or Google
 """
 
 from __future__ import annotations
@@ -77,6 +77,7 @@ class TranslationResult:
     pronunciation: str = ""  # English written in Arabic letters (pronunciation helper)
     azure_audio_seconds: float = 0.0  # usage counters (amounts only, never content)
     azure_chars: int = 0
+    google_chars: int = 0
 
 
 class SpeechBackend(Protocol):
@@ -89,6 +90,10 @@ class SpeechBackend(Protocol):
 class CloudBackend(Protocol):
     def recognize(self, audio: np.ndarray, locale: str, phrases: tuple[str, ...] = ()) -> str: ...
 
+    def translate(self, text: str, source: str | None, target: str) -> str: ...
+
+
+class TextTranslator(Protocol):
     def translate(self, text: str, source: str | None, target: str) -> str: ...
 
 
@@ -183,22 +188,40 @@ def _whisper_translate(
     )
 
 
+GOOGLE_KEY_MISSING = "Add your Google Translate API key in Settings > Cloud keys."
+
+
+def _usage(translator: str, source: str, text: str, google) -> dict:
+    """Billing amounts for one translation (characters only, never content)."""
+    if translator == "azure":
+        return {"azure_chars": len(source)}
+    if translator == "google":
+        from .google import billed_chars
+
+        creds = getattr(google, "creds", None)
+        return {"google_chars": billed_chars(creds, source, text) if creds else len(source)}
+    return {}
+
+
 def run_pipeline(
     audio: np.ndarray,
     req: TranslationRequest,
     whisper: SpeechBackend | None,
     cloud: CloudBackend | None,
+    google: TextTranslator | None = None,
 ) -> TranslationResult:
     uses_azure = "azure" in (req.speech_provider, req.translation_provider)
     if uses_azure and cloud is None:
         raise PipelineError("Add your Azure keys in Settings > Azure.")
+    if req.translation_provider == "google" and google is None:
+        raise PipelineError(GOOGLE_KEY_MISSING)
     if req.speech_provider != "azure" and whisper is None:
         raise PipelineError("Speech model isn't loaded.")
 
     if req.speech_provider == "whisper-local" and req.translation_provider == "whisper-local":
         return _whisper_translate(whisper, audio, req)
 
-    # Two-stage routes: speech -> source text -> Azure Translator.
+    # Two-stage routes: speech -> source text -> Azure Translator / Google.
     if req.speech_provider == "azure":
         if req.trim_silence:
             audio = trim_silence(audio)  # upload only the part with speech in it
@@ -219,12 +242,13 @@ def run_pipeline(
     source = apply_corrections(source, req.source_corrections)
     target = req.target_language or "en"
     src_lang = detected or req.language
-    chars = 0
+    usage = {}
     if src_lang == target.split("-")[0]:
         text = source  # already in the target language
     else:
-        text = cloud.translate(source, src_lang, target)
-        chars = len(source)
+        translator = google if req.translation_provider == "google" else cloud
+        text = translator.translate(source, src_lang, target)
+        usage = _usage(req.translation_provider, source, text, google)
     text = clean_output(text, req.gaming_mode)
     if is_hallucination(text):
         text = ""
@@ -235,7 +259,7 @@ def run_pipeline(
         detected_language=detected,
         pronunciation=pron,
         azure_audio_seconds=azure_seconds,
-        azure_chars=chars,
+        **usage,
     )
 
 
@@ -245,27 +269,31 @@ def run_text_pipeline(
     translator: str,
     cloud: CloudBackend | None,
     local_mt: LocalMT | None,
+    google: TextTranslator | None = None,
 ) -> TranslationResult:
-    """Quick text window: typed Arabic -> English. translator: 'azure' | 'local'."""
+    """Quick text window: typed Arabic -> English. translator: 'azure' | 'google' | 'local'."""
     source = " ".join(text.split())
     if not source:
         return TranslationResult(text="")
     fixed = apply_corrections(source, req.source_corrections)
-    chars = 0
+    usage = {}
     if translator == "azure":
         if cloud is None:
             raise PipelineError("Add your Azure Translator key in Settings > Azure.")
         english = cloud.translate(fixed, None, req.target_language or "en")
-        chars = len(fixed)
+        usage = _usage("azure", fixed, english, google)
+    elif translator == "google":
+        if google is None:
+            raise PipelineError(GOOGLE_KEY_MISSING)
+        english = google.translate(fixed, "ar", req.target_language or "en")
+        usage = _usage("google", fixed, english, google)
     else:
         if local_mt is None:
             raise PipelineError("Offline translator isn't available.")
         english = local_mt.translate(fixed)
     english = clean_output(english, req.gaming_mode)
     english, pron = _finish(english, req)
-    return TranslationResult(
-        text=english, source_text=source, pronunciation=pron, azure_chars=chars
-    )
+    return TranslationResult(text=english, source_text=source, pronunciation=pron, **usage)
 
 
 class LocalMT(Protocol):
@@ -279,6 +307,7 @@ def run_team_pipeline(
     cloud: CloudBackend | None,
     local_mt: LocalMT | None,
     speech_check=None,
+    google: TextTranslator | None = None,
 ) -> TranslationResult:
     """Teammate subtitles: English speech -> (optionally) translated text."""
     if req.recognizer == "azure":
@@ -297,12 +326,17 @@ def run_team_pipeline(
     english = " ".join(english.split())
     if not english or is_hallucination(english):
         return TranslationResult(text="")
-    chars = 0
+    usage = {}
     if req.translator == "azure":
         if cloud is None:
             raise PipelineError("Add your Azure Translator key in Settings > Azure.")
         text = cloud.translate(english, "en", req.target_language)
-        chars = len(english)
+        usage = _usage("azure", english, text, google)
+    elif req.translator == "google":
+        if google is None:
+            raise PipelineError(GOOGLE_KEY_MISSING)
+        text = google.translate(english, "en", req.target_language)
+        usage = _usage("google", english, text, google)
     elif req.translator == "local":
         if local_mt is None:
             raise PipelineError("Offline translator isn't available.")
@@ -315,5 +349,5 @@ def run_team_pipeline(
         source_text=shown_original,
         detected_language="en",
         azure_audio_seconds=team_seconds,
-        azure_chars=chars,
+        **usage,
     )

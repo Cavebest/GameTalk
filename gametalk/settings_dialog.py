@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QFontComboBox,
     QFormLayout,
     QFrame,
+    QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QInputDialog,
@@ -52,6 +53,7 @@ from .config import (
     AZURE,
     AZURE_LOCALES,
     GAMEPAD_BUTTONS,
+    GOOGLE,
     LOCAL,
     MAX_VOCABULARY,
     MAX_VOCABULARY_ITEM,
@@ -73,6 +75,7 @@ from .config import (
     validate,
 )
 from .credentials import protect, unprotect
+from .google import MODELS as GOOGLE_MODELS
 from .hotkey import SUPPORTED_HOTKEYS
 from .i18n import is_rtl, tr
 
@@ -266,6 +269,14 @@ def _hotkey_combo(allow_none: bool = False) -> QComboBox:
     return box
 
 
+def _result_lines(results) -> str:
+    lines = []
+    for ok, msg in results:
+        head, sep, rest = msg.partition(" (")  # "Azure Translator: connected (مرحبا → Hi)"
+        lines.append(f"{'✅' if ok else '❌'} {tr(head)}{sep}{rest}")
+    return "\n".join(lines)
+
+
 class _Relay(QObject):
     """Carries a background-thread result back to the UI thread."""
 
@@ -360,6 +371,8 @@ class SettingsDialog(QDialog):
 
         self._relay = _Relay(self)
         self._relay.done.connect(self._on_azure_tested)
+        self._google_relay = _Relay(self)
+        self._google_relay.done.connect(self._on_google_tested)
         self._level_timer = QTimer(self, interval=50, timeout=self._update_level)
         self.c.test_result.connect(self._on_test_result)
         self.c.hotkey.captured.connect(self._on_captured)
@@ -668,6 +681,7 @@ class SettingsDialog(QDialog):
         urow.addWidget(reset)
         f.addRow(tr("This month:"), urow)
         self._show_usage()
+        f.addRow(self._google_section())
         f.addRow(
             _note(
                 tr(
@@ -679,6 +693,41 @@ class SettingsDialog(QDialog):
             )
         )
         return w
+
+    def _google_section(self) -> QWidget:
+        box = QGroupBox("Google Translate")
+        g = QFormLayout(box)
+        self.google_key = QLineEdit()
+        self.google_key.setEchoMode(QLineEdit.EchoMode.Password)
+        g.addRow(tr("API key:"), self.google_key)
+        self.google_model = _combo(GOOGLE_MODELS)
+        self.google_model.currentIndexChanged.connect(self._update_dependent_widgets)
+        g.addRow(tr("Model:"), self.google_model)
+        self.google_project = QLineEdit()
+        self.google_project.setPlaceholderText(tr("e.g. my-project-123456"))
+        g.addRow(tr("Project ID:"), self.google_project)
+        row = QHBoxLayout()
+        self.google_test_btn = QPushButton(tr("Test Google"))
+        self.google_test_btn.clicked.connect(self._test_google)
+        forget = QPushButton(tr("Forget saved key"))
+        forget.clicked.connect(self._clear_google_key)
+        row.addWidget(self.google_test_btn)
+        row.addWidget(forget)
+        row.addStretch(1)
+        g.addRow("", row)
+        self.google_result = QLabel("")
+        self.google_result.setWordWrap(True)
+        self.google_result.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        g.addRow(self.google_result)
+        g.addRow(
+            _note(
+                tr(
+                    "Free: 500,000 characters a month (about 16,000 short sentences). Google "
+                    "needs billing turned on in your Cloud project. Only text is sent, never audio."
+                )
+            )
+        )
+        return box
 
     def _hotkey_page(self) -> QWidget:
         w, f = self._form()
@@ -1208,6 +1257,13 @@ class SettingsDialog(QDialog):
             field.setPlaceholderText(tr(SAVED_PLACEHOLDER) if stored else tr("paste key here"))
         self.speech_region.setText(a.speech_region)
         self.translator_region.setText(a.translator_region)
+        gs = self.s.google
+        self.google_key.clear()
+        self.google_key.setPlaceholderText(
+            tr(SAVED_PLACEHOLDER) if gs.api_key else tr("paste key here")
+        )
+        _select(self.google_model, gs.model)
+        self.google_project.setText(gs.project_id)
 
     def _store_azure(self) -> None:
         a = self.s.azure
@@ -1217,6 +1273,11 @@ class SettingsDialog(QDialog):
             a.translator_key = protect(self.translator_key.text().strip())
         a.speech_region = self.speech_region.text()
         a.translator_region = self.translator_region.text()
+        gs = self.s.google
+        if self.google_key.text().strip():
+            gs.api_key = protect(self.google_key.text().strip())
+        gs.model = self.google_model.currentData()
+        gs.project_id = self.google_project.text().strip()
 
     def _form_credentials(self):
         """Credentials as currently shown: typed keys win over saved ones."""
@@ -1367,20 +1428,27 @@ class SettingsDialog(QDialog):
         whisper_item.setEnabled(not azure_speech)
         if azure_speech and self.provider_box.currentData() == LOCAL:
             _select(self.provider_box, AZURE)
-        azure_translate = self.provider_box.currentData() == AZURE
+        cloud_translate = self.provider_box.currentData() in (AZURE, GOOGLE)
+        google_translate = self.provider_box.currentData() == GOOGLE
         self.locale_box.setEnabled(azure_speech)
         for widget in (self.model_box, self.src_box, self.autodetect):
             widget.setEnabled(not azure_speech)
         if not azure_speech:
             self.src_box.setEnabled(not self.autodetect.isChecked())
-        self.target_box.setEnabled(azure_translate)
-        if not azure_translate:
+        self.target_box.setEnabled(cloud_translate)
+        if not cloud_translate:
             _select(self.target_box, "en")
         self.vocab_on.setEnabled(True)
         self.vocab.setEnabled(self.vocab_on.isChecked())
-        if azure_speech:
+        if google_translate:
+            note = tr(
+                "Your speech becomes text first ({engine}); only that text is sent to "
+                "Google Translate.",
+                engine="Azure Speech" if azure_speech else "Whisper",
+            )
+        elif azure_speech:
             note = tr("Azure Speech → Azure Translator: your audio and its text are sent to Azure.")
-        elif azure_translate:
+        elif cloud_translate:
             note = tr(
                 "Whisper recognises Arabic locally; only the recognised text is sent to "
                 "Azure Translator."
@@ -1391,6 +1459,7 @@ class SettingsDialog(QDialog):
                 "context hint, not a find-and-replace list."
             )
         self.translation_note.setText(note)
+        self.google_project.setEnabled(self.google_model.currentData() == "llm")
         local_team = self.team_translator.currentData() == "local"
         self.team_target.setEnabled(not local_team and self.team_translator.currentData() != "none")
         if local_team:
@@ -1494,6 +1563,43 @@ class SettingsDialog(QDialog):
         self._level_timer.start()
         self.c.test_microphone(self.mic_box.currentData() or "")
 
+    def _google_form_credentials(self):
+        from .google import GoogleCredentials
+
+        gs = self.s.google
+        return GoogleCredentials(
+            api_key=self.google_key.text().strip() or unprotect(gs.api_key),
+            project_id=self.google_project.text().strip(),
+            model=self.google_model.currentData(),
+            location=gs.location,
+        )
+
+    def _test_google(self) -> None:
+        from .google import check_connection
+
+        creds = self._google_form_credentials()
+        self.google_test_btn.setEnabled(False)
+        self.google_result.setText(tr("Testing…"))
+        relay = self._google_relay
+
+        def work():
+            try:
+                results = check_connection(creds)
+            except Exception as e:  # never let the worker thread die silently
+                results = [(False, f"Test failed: {type(e).__name__}")]
+            relay.done.emit(results)
+
+        threading.Thread(target=work, name="gametalk-google-test", daemon=True).start()
+
+    def _on_google_tested(self, results) -> None:
+        self.google_test_btn.setEnabled(True)
+        self.google_result.setText(_result_lines(results))
+
+    def _clear_google_key(self) -> None:
+        self.s.google.api_key = ""
+        self._load_azure()
+        self.google_result.setText(tr("Saved keys will be removed when you click Save."))
+
     def _test_azure(self) -> None:
         from .azure import check_connection
 
@@ -1513,11 +1619,7 @@ class SettingsDialog(QDialog):
 
     def _on_azure_tested(self, results) -> None:
         self.azure_test_btn.setEnabled(True)
-        lines = []
-        for ok, msg in results:
-            head, sep, rest = msg.partition(" (")  # "Azure Translator: connected (مرحبا → Hi)"
-            lines.append(f"{'✅' if ok else '❌'} {tr(head)}{sep}{rest}")
-        self.azure_result.setText("\n".join(lines))
+        self.azure_result.setText(_result_lines(results))
 
     def _clear_azure_keys(self) -> None:
         a = self.s.azure

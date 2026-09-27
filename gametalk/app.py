@@ -19,8 +19,9 @@ from PySide6.QtCore import QObject, QTimer, Signal
 from . import win32
 from .audio import MAX_SECONDS, MIN_SECONDS, TARGET_RATE, MicrophoneError, is_digital_silence
 from .azure import AzureCredentials
-from .config import AZURE, LOCAL, ConfigStore, Profile, Settings
+from .config import AZURE, GOOGLE, LOCAL, ConfigStore, Profile, Settings
 from .credentials import unprotect
+from .google import GoogleCredentials
 from .hotkey import hotkey_vk
 from .i18n import tr
 from .phrasebook import Phrasebook, normalize
@@ -138,6 +139,7 @@ class Controller(QObject):
         self._settings_dialog = None
         self._help_dialog = None
         self._creds_cache: tuple[tuple, AzureCredentials] | None = None
+        self._google_cache: tuple[tuple, GoogleCredentials] | None = None
         self._pending_test = False
         self._fullscreen_warned = False
         self._key_misses = 0
@@ -222,9 +224,33 @@ class Controller(QObject):
             self._creds_cache = (key, creds)
         return self._creds_cache[1]
 
+    def google_credentials(self) -> GoogleCredentials:
+        """Decrypted Google key (cached until the stored values change)."""
+        g = self.settings.google
+        key = (g.api_key, g.project_id, g.model, g.location)
+        if self._google_cache is None or self._google_cache[0] != key:
+            creds = GoogleCredentials(
+                api_key=unprotect(g.api_key),
+                project_id=g.project_id,
+                model=g.model,
+                location=g.location,
+            )
+            self._google_cache = (key, creds)
+        return self._google_cache[1]
+
+    def _google_problem(self) -> str:
+        creds = self.google_credentials()
+        if not creds.has_key:
+            return tr("Add your Google Translate API key in Settings > Cloud keys.")
+        if not creds.ready:
+            return tr("Google Translation LLM needs your Google Cloud project ID.")
+        return ""
+
     def _missing_azure_setup(self) -> str:
-        """'' if the active profile's Azure services are configured, else what to fix."""
+        """'' if the active profile's cloud services are configured, else what to fix."""
         p = self.profile
+        if p.uses_google and (problem := self._google_problem()):
+            return problem
         if not p.uses_azure:
             return ""
         creds = self.azure_credentials()
@@ -466,6 +492,8 @@ class Controller(QObject):
         self.pending += 1
         self.overlay.show_processing()
         job = Job(audio, self._request(), tag, creds, speech_gate=speech_gate)
+        if self.profile.uses_google:
+            job.google = self.google_credentials()
         self.speech.process(job)
 
     def _on_finished(self, tag: str, result: TranslationResult) -> None:
@@ -531,10 +559,13 @@ class Controller(QObject):
     def _count_usage(self, result: TranslationResult) -> None:
         if not self.features.azure_usage_tracking:
             return
-        warnings = self.usage.add(result.azure_audio_seconds, result.azure_chars)
+        warnings = self.usage.add(
+            result.azure_audio_seconds, result.azure_chars, result.google_chars
+        )
+        names = {"speech": "Azure Speech", "translator": "Azure Translator"}
         for w in warnings:
             service, level = w.split(":")
-            name = "Azure Speech" if service == "speech" else "Azure Translator"
+            name = names.get(service, "Google Translate")
             if float(level) >= 1.0:
                 msg = tr("{name}: this month's free quota is used up.", name=name)
             else:
@@ -603,10 +634,18 @@ class Controller(QObject):
     # ---- quick text box ---------------------------------------------------------------------
 
     def _text_translator(self) -> str:
+        """auto: the profile's cloud translator if set up, then any cloud key, else offline."""
         choice = self.features.quick_text_translator
-        if choice == "auto":
-            return AZURE if self.azure_credentials().has_translator else "local"
-        return choice
+        if choice != "auto":
+            return choice
+        azure_ok = self.azure_credentials().has_translator
+        google_ok = self.google_credentials().ready
+        provider = self.profile.translation_provider
+        if provider == GOOGLE and google_ok:
+            return GOOGLE
+        if provider == AZURE and azure_ok:
+            return AZURE
+        return AZURE if azure_ok else GOOGLE if google_ok else "local"
 
     def open_quick_text(self) -> None:
         if not self.features.quick_text_enabled:
@@ -621,16 +660,21 @@ class Controller(QObject):
     def translate_text(self, text: str) -> None:
         translator = self._text_translator()
         creds = self.azure_credentials() if translator == AZURE else None
+        problem = ""
         if translator == AZURE and not creds.has_translator:
+            problem = tr("Add your Azure Translator key in Settings > Azure.")
+        elif translator == GOOGLE:
+            problem = self._google_problem()
+        if problem:
             if self._quick_text is not None:
-                self._quick_text.show_error(
-                    tr("Add your Azure Translator key in Settings > Azure.")
-                )
+                self._quick_text.show_error(problem)
             return
         req = self._request()
         job = Job(
             np.zeros(0, np.float32), req, "text", creds, text=text, text_translator=translator
         )
+        if translator == GOOGLE:
+            job.google = self.google_credentials()
         self.speech.process(job)
 
     def _on_text_finished(self, result: TranslationResult) -> None:
@@ -735,8 +779,12 @@ class Controller(QObject):
                 tm.translator == AZURE and not creds.has_translator
             ):
                 return
+        if tm.translator == GOOGLE and self._google_problem():
+            return
         self.team_pending = 1
         job = Job(audio, TranslationRequest("en"), "team", creds, team=self._team_request())
+        if tm.translator == GOOGLE:
+            job.google = self.google_credentials()
         self.speech.process(job)
 
     def _on_team_finished(self, result: TranslationResult) -> None:

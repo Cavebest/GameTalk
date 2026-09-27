@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from gametalk import config, help, i18n, launcher, settings_dialog
+from gametalk import config, google, help, i18n, launcher, settings_dialog
 from gametalk.i18n_ar import AR
 
 PKG = pathlib.Path(__file__).resolve().parents[1] / "gametalk"
@@ -33,6 +33,7 @@ def _labels() -> set[str]:
         config.TEAM_RECOGNIZERS,
         config.TEAM_TRANSLATORS,
         config.QUICK_TEXT_TRANSLATORS,
+        google.MODELS,
         settings_dialog.DEVICE_LABELS,
         settings_dialog.MONITOR_LABELS,
         settings_dialog.POSITION_LABELS,

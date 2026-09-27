@@ -18,6 +18,7 @@ COMPUTE_DEVICES = ["auto", "cuda", "cpu"]
 HOTKEY_MODES = ["push", "toggle", "voice"]  # voice = open mic (no key needed)
 LOCAL = "whisper-local"
 AZURE = "azure"
+GOOGLE = "google"
 SPEECH_PROVIDERS = {
     LOCAL: "Whisper (local, offline)",
     AZURE: "Azure Speech (cloud, most accurate)",
@@ -25,6 +26,7 @@ SPEECH_PROVIDERS = {
 TRANSLATION_PROVIDERS = {
     LOCAL: "Whisper (local, speech → English)",
     AZURE: "Azure Translator (cloud)",
+    GOOGLE: "Google Translate (cloud)",
 }
 TARGET_LANGUAGES = {  # Whisper can only produce English; the rest need Azure Translator
     "en": "English",
@@ -68,6 +70,7 @@ TEAM_RECOGNIZERS = {LOCAL: "Whisper (local)", AZURE: "Azure Speech (cloud)"}
 TEAM_TRANSLATORS = {
     "local": "Offline model (on this PC)",
     AZURE: "Azure Translator (cloud)",
+    GOOGLE: "Google Translate (cloud)",
     "none": "Don't translate (show English text)",
 }
 GAMEPAD_BUTTONS = [
@@ -90,9 +93,10 @@ GAMEPAD_BUTTONS = [
     "DPadRight",
 ]
 QUICK_TEXT_TRANSLATORS = {
-    "auto": "Automatic (Azure if keys are saved, otherwise offline)",
+    "auto": "Automatic (your cloud translator if set up, otherwise offline)",
     "local": "Offline model (on this PC)",
     "azure": "Azure Translator (cloud)",
+    "google": "Google Translate (cloud)",
 }
 # Common spoken-dialect words -> standard Arabic, applied before text translation. Offline
 # models and Azure translate standard Arabic far better ("خليكم وراي" -> "ابقوا خلفي").
@@ -257,6 +261,10 @@ class Profile:
         return AZURE in (self.speech_provider, self.translation_provider)
 
     @property
+    def uses_google(self) -> bool:
+        return self.translation_provider == GOOGLE
+
+    @property
     def mode(self) -> str:
         pair = (self.speech_provider, self.translation_provider)
         return next((m for m, v in MODES.items() if v == pair), "local")
@@ -273,6 +281,16 @@ class AzureSettings:
     speech_region: str = ""
     translator_key: str = ""
     translator_region: str = ""
+
+
+@dataclass
+class GoogleSettings:
+    """Google Cloud Translation. The API key is stored DPAPI-encrypted, like the Azure keys."""
+
+    api_key: str = ""
+    project_id: str = ""  # only needed for the Translation LLM model
+    model: str = "nmt"  # "nmt" | "llm"
+    location: str = "us-central1"
 
 
 @dataclass
@@ -350,6 +368,7 @@ class Settings:
     active_profile: str = "Default"
     overlay: OverlayStyle = field(default_factory=OverlayStyle)
     azure: AzureSettings = field(default_factory=AzureSettings)
+    google: GoogleSettings = field(default_factory=GoogleSettings)
     features: Features = field(default_factory=Features)
     teammates: TeammateSettings = field(default_factory=TeammateSettings)
     profiles: list[Profile] = field(default_factory=lambda: [Profile()])
@@ -389,6 +408,11 @@ def validate(settings: Settings) -> Settings:
         if not _is_hex_color(getattr(o, attr)):
             setattr(o, attr, default)
     o.font_family = o.font_family.strip()[:64] or "Segoe UI"
+    g = settings.google
+    if g.model not in ("nmt", "llm"):
+        g.model = "nmt"
+    g.project_id = "".join(g.project_id.split())[:64]
+    g.location = "".join(g.location.split()).lower()[:32] or "us-central1"
     f = settings.features
     if f.ui_language not in UI_LANGUAGES:
         f.ui_language = "auto"
@@ -438,7 +462,7 @@ def validate(settings: Settings) -> Settings:
             p.speech_provider = LOCAL
         if p.translation_provider not in TRANSLATION_PROVIDERS:
             p.translation_provider = LOCAL
-        if p.speech_provider == AZURE:
+        if p.speech_provider == AZURE and p.translation_provider == LOCAL:
             p.translation_provider = AZURE  # Whisper can't translate text
         if p.azure_locale not in AZURE_LOCALES:
             p.azure_locale = "ar-SA"

@@ -88,6 +88,10 @@ def snapshot(c) -> dict:
         or (tm.enabled and "azure" in (tm.recognizer, tm.translator))
         or (f.quick_text_enabled and f.quick_text_translator == "azure"),
         "creds": c.azure_credentials(),
+        "google_needed": p.uses_google
+        or (tm.enabled and tm.translator == "google")
+        or (f.quick_text_enabled and c._text_translator() == "google"),
+        "google_creds": c.google_credentials(),
         "team_enabled": tm.enabled,
         "team_device": tm.device,
         "team_local": tm.enabled and tm.translator == "local",
@@ -244,6 +248,21 @@ def run_checks(s: dict, open_mic=None) -> list[Check]:
             )
     else:
         out.append(Check("info", "Azure", tr("Not used by your current settings.")))
+
+    # Google Translate
+    if s.get("google_needed"):
+        from .google import check_connection as check_google
+
+        for ok, msg in check_google(s["google_creds"]):
+            head, sep, rest = msg.partition(" (")
+            out.append(
+                Check(
+                    "ok" if ok else "fail",
+                    "Google Translate",
+                    tr(head) + sep + rest,
+                    "" if ok else tr("Settings → Cloud keys: check the Google API key."),
+                )
+            )
 
     # Offline models
     from .local_mt import AR_EN, EN_AR

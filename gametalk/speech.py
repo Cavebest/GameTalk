@@ -20,6 +20,7 @@ from PySide6.QtCore import QObject, QThread, Signal, Slot
 
 from .audio import TARGET_RATE as SAMPLE_RATE
 from .azure import AzureClient, AzureCredentials, AzureError
+from .google import GoogleClient, GoogleCredentials, GoogleError
 from .i18n import tr
 from .local_mt import AR_EN, LocalTranslator, LocalTranslatorError
 from .translate import (
@@ -53,7 +54,8 @@ class Job:
     azure: AzureCredentials | None = None
     team: TeamRequest | None = None  # set for teammate-subtitle jobs
     text: str | None = None  # set for quick-text jobs (typed Arabic)
-    text_translator: str = "local"  # quick text: "local" | "azure"
+    text_translator: str = "local"  # quick text: "local" | "azure" | "google"
+    google: GoogleCredentials | None = None  # set when a Google translation is needed
     speech_gate: bool = False  # open mic: drop the clip unless it really contains speech
     started: float = field(default_factory=time.perf_counter)
 
@@ -209,6 +211,7 @@ class _Worker(QObject):
         super().__init__()
         self.backend = WhisperBackend()
         self.azure: AzureClient | None = None
+        self.google: GoogleClient | None = None
         self.local_mt = LocalTranslator()  # EN->AR, loaded only if teammate subtitles use it
         self.local_ar_en = LocalTranslator(AR_EN)  # AR->EN, loaded only for the quick text box
         self.cancelled = threading.Event()  # set on app shutdown: skip whatever is queued
@@ -222,6 +225,15 @@ class _Worker(QObject):
                 self.azure.close()
             self.azure = AzureClient(creds)
         return self.azure
+
+    def _google_client(self, creds: GoogleCredentials | None) -> GoogleClient | None:
+        if creds is None or not creds.has_key:
+            return None
+        if self.google is None or self.google.creds != creds:
+            if self.google is not None:
+                self.google.close()
+            self.google = GoogleClient(creds)
+        return self.google
 
     @Slot(object)
     def load(self, cfg: EngineConfig) -> None:
@@ -278,6 +290,9 @@ class _Worker(QObject):
         if self.azure is not None:
             self.azure.close()
             self.azure = None
+        if self.google is not None:
+            self.google.close()
+            self.google = None
 
     @Slot(object)
     def process(self, job: Job) -> None:
@@ -293,6 +308,7 @@ class _Worker(QObject):
                     job.text_translator,
                     self._azure_client(job.azure),
                     self.local_ar_en,
+                    google=self._google_client(job.google),
                 )
                 result.seconds = time.perf_counter() - job.started
                 log.info("Quick text translated in %.2fs", result.seconds)
@@ -308,6 +324,7 @@ class _Worker(QObject):
                     self._azure_client(job.azure),
                     self.local_mt,
                     speech_check=is_speech,
+                    google=self._google_client(job.google),
                 )
                 result.seconds = time.perf_counter() - job.started
                 log.info(
@@ -324,7 +341,13 @@ class _Worker(QObject):
                 if not is_speech(job.audio):  # a cough, a keyboard, game sound: ignore quietly
                     self.finished.emit(job.tag, TranslationResult(text=""))
                     return
-            result = run_pipeline(job.audio, req, whisper, self._azure_client(job.azure))
+            result = run_pipeline(
+                job.audio,
+                req,
+                whisper,
+                self._azure_client(job.azure),
+                google=self._google_client(job.google),
+            )
             result.seconds = time.perf_counter() - job.started
             # Only timings are logged — never the speech content.
             log.info(
@@ -337,7 +360,7 @@ class _Worker(QObject):
                 not result.text,
             )
             self.finished.emit(job.tag, result)
-        except (ModelError, AzureError, PipelineError, LocalTranslatorError) as e:
+        except (ModelError, AzureError, GoogleError, PipelineError, LocalTranslatorError) as e:
             self.failed.emit(job.tag, str(e))
         except Exception as e:
             msg = str(e).lower()

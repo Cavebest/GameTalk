@@ -104,10 +104,10 @@ with the phrase list) recognise game terms. It is a hint — it never replaces w
 قائمة العبارات) يفهم مصطلحات اللعبة. هي تلميح بس — ما بتستبدل كلمات أبداً.</p>""",
     ),
     "azure": (
-        "Azure keys",
-        "مفاتيح Azure",
-        "Keys for Microsoft Azure (only needed if you choose Azure somewhere).",
-        "مفاتيح Microsoft Azure (بتلزم بس إذا اخترت Azure بمكان ما).",
+        "Cloud keys",
+        "مفاتيح السحابة",
+        "Keys for Microsoft Azure and Google Translate (only needed if you choose them).",
+        "مفاتيح Microsoft Azure و Google Translate (بتلزم بس إذا اخترتهم).",
         """<ol><li>portal.azure.com → Create resource → <b>Speech</b> → Keys and Endpoint →
 copy <b>Key 1</b> and <b>Location/Region</b>.</li>
 <li>Create resource → <b>Translator</b> → copy its Key and Region (<i>global</i> for a global
@@ -118,7 +118,19 @@ tiers are enough for voice chat.</p>
 <p><b>Phrase list</b> (Features page): sends your gaming vocabulary to Azure Speech so it
 recognises game words better.</p>
 <p><b>Usage counter</b>: shows how much of this month's free quota you've used (5 audio hours
-for Speech, 2 million characters for Translator) and warns you at 80% and 100%.</p>""",
+for Speech, 2 million characters for Translator) and warns you at 80% and 100%.</p>
+<h3>Google Translate</h3>
+<ol><li>console.cloud.google.com → create a project and turn on <b>billing</b> (a card is
+required even for the free amount).</li>
+<li>APIs &amp; Services → Library → enable <b>Cloud Translation API</b>.</li>
+<li>APIs &amp; Services → Credentials → <b>Create API key</b> (restrict it to Cloud Translation
+API).</li>
+<li>Paste the key here, choose the model, press <b>Test Google</b>, then Save.</li></ol>
+<p><b>Standard (NMT)</b>: the first 500,000 characters each month are free (about 16,000
+short sentences), then $20 per million. <b>Translation LLM</b>: Google's smarter model, better
+with dialect and context; it needs your <b>project ID</b> (shown on the Cloud console home page)
+and costs $10 per million characters in + $10 per million out, from the same monthly
+credit. Only the recognised text is sent to Google — never your voice.</p>""",
         """<ol><li>portal.azure.com ← إنشاء مورد ← <b>Speech</b> ← المفاتيح ونقطة النهاية ←
 انسخ <b>Key 1</b> و<b>المنطقة</b>.</li>
 <li>إنشاء مورد ← <b>Translator</b> ← انسخ المفتاح والمنطقة (<i>global</i> إذا المورد عالمي).</li>
@@ -128,7 +140,18 @@ for Speech, 2 million characters for Translator) and warns you at 80% and 100%.<
 <p><b>قائمة العبارات</b> (صفحة الميزات): بتبعث كلمات الألعاب لـ Azure Speech عشان يفهم
 مصطلحات اللعبة أحسن.</p>
 <p><b>عدّاد الاستهلاك</b>: بيوضح قديش استعملت من الحصة المجانية لهالشهر (5 ساعات صوت لـ Speech،
-ومليونين حرف لـ Translator) وبينبّهك عند 80% و100%.</p>""",
+ومليونين حرف لـ Translator) وبينبّهك عند 80% و100%.</p>
+<h3>Google Translate</h3>
+<ol><li>console.cloud.google.com ← أنشئ مشروع وفعّل <b>الدفع (Billing)</b> (البطاقة إجبارية حتى
+للكمية المجانية).</li>
+<li>APIs &amp; Services ← Library ← فعّل <b>Cloud Translation API</b>.</li>
+<li>APIs &amp; Services ← Credentials ← <b>Create API key</b> (وقيّده على Cloud Translation
+API).</li>
+<li>الصق المفتاح هون، اختار الموديل، اضغط <b>اختبار Google</b>، وبعدين حفظ.</li></ol>
+<p><b>العادي (NMT)</b>: أول 500 ألف حرف كل شهر مجانية (تقريباً 16 ألف جملة قصيرة)، وبعدها 20$
+لكل مليون حرف. <b>Translation LLM</b>: موديل جوجل الأذكى، أحسن مع اللهجة والسياق؛ بده
+<b>رقم المشروع (Project ID)</b> (موجود بالصفحة الرئيسية للـ Cloud console)، وسعره 10$ لكل مليون حرف
+داخل + 10$ لكل مليون حرف طالع، من نفس الرصيد الشهري. بس النص المفهوم بيروح لجوجل — صوتك أبداً.</p>""",
     ),
     "hotkey": (
         "Hotkeys",

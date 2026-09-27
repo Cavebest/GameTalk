@@ -36,8 +36,10 @@ def test_usage_file_holds_no_content(tmp_path):
         "month",
         "speech_seconds",
         "translator_chars",
+        "google_chars",
         "warned_speech",
         "warned_translator",
+        "warned_google",
     }
 
 

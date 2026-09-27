@@ -1,9 +1,10 @@
 # Copyright (c) 2026 Shkour Bashtawi (github.com/ShkourBashtawi). MIT License.
-"""Azure usage counter: how much of the monthly free tier (F0) you've used.
+"""Cloud usage counter: how much of the monthly free tiers you've used.
 
 Counts only amounts (seconds of audio sent to Azure Speech, characters sent to Azure
-Translator) — never what was said. Stored in %APPDATA%\\GameTalk\\usage.json, written at most
-once every 30 s (and on exit) to avoid needless disk writes.
+Translator and Google Translate) — never what was said. Stored in
+%APPDATA%\\GameTalk\\usage.json, written at most once every 30 s (and on exit) to avoid
+needless disk writes.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ log = logging.getLogger(__name__)
 
 SPEECH_FREE_SECONDS = 5 * 3600  # Azure Speech F0: 5 audio hours / month
 TRANSLATOR_FREE_CHARS = 2_000_000  # Azure Translator F0: 2 million characters / month
+GOOGLE_FREE_CHARS = 500_000  # Google Cloud Translation: $10 monthly credit (NMT characters)
 WARN_AT = (0.8, 1.0)
 SAVE_EVERY_S = 30.0
 
@@ -32,8 +34,10 @@ class MonthUsage:
     month: str
     speech_seconds: float = 0.0
     translator_chars: int = 0
+    google_chars: int = 0
     warned_speech: float = 0.0  # highest warning level already shown (0, 0.8, 1.0)
     warned_translator: float = 0.0
+    warned_google: float = 0.0
 
     @property
     def speech_fraction(self) -> float:
@@ -42,6 +46,10 @@ class MonthUsage:
     @property
     def translator_fraction(self) -> float:
         return self.translator_chars / TRANSLATOR_FREE_CHARS
+
+    @property
+    def google_fraction(self) -> float:
+        return self.google_chars / GOOGLE_FREE_CHARS
 
 
 class UsageTracker:
@@ -61,8 +69,10 @@ class UsageTracker:
                     month=month,
                     speech_seconds=float(data.get("speech_seconds", 0)),
                     translator_chars=int(data.get("translator_chars", 0)),
+                    google_chars=int(data.get("google_chars", 0)),
                     warned_speech=float(data.get("warned_speech", 0)),
                     warned_translator=float(data.get("warned_translator", 0)),
+                    warned_google=float(data.get("warned_google", 0)),
                 )
         except (OSError, ValueError, TypeError):
             pass
@@ -74,14 +84,17 @@ class UsageTracker:
             self.current = MonthUsage(month=month)
             self._dirty = True
 
-    def add(self, speech_seconds: float = 0.0, translator_chars: int = 0) -> list[str]:
+    def add(
+        self, speech_seconds: float = 0.0, translator_chars: int = 0, google_chars: int = 0
+    ) -> list[str]:
         """Record usage; returns warning keys that just crossed a threshold."""
-        if not speech_seconds and not translator_chars:
+        if not speech_seconds and not translator_chars and not google_chars:
             return []
         self._roll_month()
         u = self.current
         u.speech_seconds += max(0.0, speech_seconds)
         u.translator_chars += max(0, translator_chars)
+        u.google_chars += max(0, google_chars)
         self._dirty = True
         warnings = []
         for level in WARN_AT:
@@ -91,6 +104,9 @@ class UsageTracker:
             if u.translator_fraction >= level > u.warned_translator:
                 u.warned_translator = level
                 warnings.append(f"translator:{level}")
+            if u.google_fraction >= level > u.warned_google:
+                u.warned_google = level
+                warnings.append(f"google:{level}")
         if self._clock() - self._last_save >= SAVE_EVERY_S:
             self.save()
         return warnings

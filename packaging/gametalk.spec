@@ -19,6 +19,15 @@ for pkg in ("faster_whisper", "ctranslate2", "azure.cognitiveservices.speech", "
     hiddenimports += h
 datas += collect_data_files("_sounddevice_data")
 hiddenimports += ["sentencepiece", "gametalk.launcher", "gametalk.__main__"]
+# The main window is Qt Quick: ship its QML files and the Qt Quick modules it imports.
+datas.append((os.path.join(os.path.dirname(HERE), "gametalk", "hub", "qml"), "gametalk/hub/qml"))
+hiddenimports += [
+    "gametalk.hub",
+    "gametalk.hub.backend",
+    "PySide6.QtQml",
+    "PySide6.QtQuick",
+    "PySide6.QtQuickControls2",
+]
 
 if WITH_CUDA:  # cuBLAS so Whisper can use an NVIDIA GPU (found at runtime under nvidia/*/bin)
     for dll in glob.glob(os.path.join(SITE, "nvidia", "cublas", "bin", "*.dll")):

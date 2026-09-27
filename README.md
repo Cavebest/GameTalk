@@ -10,14 +10,15 @@
 [![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white)](#en-install)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](#en-install)
 [![Whisper](https://img.shields.io/badge/Whisper-local%20%26%20offline-22c55e)](#en-how)
-[![Azure](https://img.shields.io/badge/Azure-optional-0089D6?logo=microsoftazure&logoColor=white)](#en-azure)
+[![Azure](https://img.shields.io/badge/Azure-optional-0089D6?logo=microsoftazure&logoColor=white)](#en-cloud)
+[![Google Translate](https://img.shields.io/badge/Google%20Translate-optional-4285F4?logo=googletranslate&logoColor=white)](#en-cloud)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **[English](#english)** · **[العربية](#arabic)**
 
-<img src="docs/images/overlay-in-game.png" alt="GameTalk overlay on top of a game" width="900">
+<img src="docs/images/hub-home-en.png" alt="GameTalk main window" width="900">
 
-<sub>Bottom: your Arabic, translated to English, with pronunciation help. Top: a teammate's English, subtitled in Arabic.</sub>
+<sub>The main window: live status, your last translation, response time, and the path your voice takes.</sub>
 
 </div>
 
@@ -37,9 +38,9 @@
 - [First run: 5 minutes](#en-first-run)
 - [Everyday use](#en-usage)
 - [Speech and translation engines](#en-engines)
-- [Azure (optional)](#en-azure)
+- [Cloud services: Azure and Google (optional)](#en-cloud)
 - [All features](#en-features)
-- [Settings pages](#en-settings)
+- [The main window, page by page](#en-settings)
 - [Profiles per game](#en-profiles)
 - [Privacy](#en-privacy)
 - [Performance](#en-performance)
@@ -51,20 +52,23 @@
 
 ### 🎮 What is GameTalk?
 
-GameTalk Translator is a small Windows app for Arabic-speaking gamers who play with
-English-speaking teammates.
+GameTalk Translator is a Windows app for Arabic-speaking gamers who play with English-speaking
+teammates.
 
 1. **Hold a key** (default **F9**) and speak Arabic, in any dialect.
 2. **Let go.** About a second later, a small overlay above your game shows the sentence in natural
    English, e.g. «خليكم وراي، أنا رح أفتح الباب» → *"Stay behind me, I'll open the door."*
 3. **Say it** yourself on voice chat, with optional Arabic-letter pronunciation help.
 
-It also works the other way: **teammate subtitles** translate what your teammates say into Arabic
+It also works the other way: **teammate subtitles** turn what your teammates say into Arabic
 subtitles.
 
+<p align="center"><img src="docs/images/overlay-in-game.png" alt="GameTalk overlay on top of a game" width="820"></p>
+<p align="center"><sub>Bottom: your Arabic, translated to English, with pronunciation help. Top: a teammate's English, subtitled in Arabic.</sub></p>
+
 > **Safe for games.** GameTalk never speaks for you, never types into a game, and never injects
-> into, hooks or modifies any game. It listens for its hotkey through Windows Raw Input and draws
-> a click-through window that never takes focus away from your game.
+> into, hooks or modifies any game. It listens for its hotkey through Windows Raw Input and draws a
+> click-through window that never takes focus away from your game.
 
 <a id="en-highlights"></a>
 
@@ -74,40 +78,39 @@ subtitles.
 |---|---|
 | 🎙️ **Push-to-talk, toggle or open mic** | Keyboard key, mouse button (Mouse4/5) or controller button (RB, …) |
 | 💻 **Works fully offline** | Whisper runs on your NVIDIA GPU or your CPU; nothing leaves your PC |
-| ☁️ **Optional Azure** | Dialect-aware Azure Speech and Azure Translator, each chosen separately |
-| 🪟 **Overlay that stays out of your way** | Click-through, never steals focus, per-game position, size, colours and fonts |
+| ☁️ **Optional cloud engines** | Azure Speech knows 17 Arabic dialects; translate with Azure Translator or **Google Translate** (including Google's Translation LLM) |
+| 🖥️ **A main window that feels like gaming gear** | Dark, animated, live dashboard, in the style of SteelSeries GG |
+| 🪟 **Overlay that stays out of your way** | Click-through, never steals focus. Design its position, size, colours and fonts per game with a live preview |
 | 👥 **Teammate subtitles** | Translates what you *hear* (game or Discord) into Arabic |
 | ⌨️ **Quick text box** | Press F8, type Arabic, get English for text chat |
 | 💬 **Quick phrases** | "Enemy spotted!" on Numpad1, shown instantly |
 | 📘 **Learning mode** | Your personal phrasebook plus flash cards, so you need the app less over time |
-| 🇸🇦 **Full Arabic interface** | Right-to-left UI, and every feature explained in Arabic and English |
+| 🇸🇦 **Full Arabic interface** | Right-to-left everywhere, and every feature explained in Arabic and English |
 | 🪶 **Lightweight** | 0% CPU when idle; the mic is only open while you hold the key |
 
 <a id="en-screenshots"></a>
 
 ### 📸 Screenshots
 
-| Launcher | Settings |
+| Engines: pick who listens and who translates | Features: every switch, with search |
 |:---:|:---:|
-| <img src="docs/images/launcher-en.png" width="330"> | <img src="docs/images/settings-features-en.png" width="520"> |
-| **Overlay states** | **Quick text box (F8)** |
-| <img src="docs/images/overlay-states.png" width="520"> | <img src="docs/images/quicktext-en.png" width="420"> |
-| **Self-test** | **My phrasebook** |
-| <img src="docs/images/selftest-en.png" width="420"> | <img src="docs/images/phrasebook-en.png" width="460"> |
+| <img src="docs/images/hub-engines-en.png" width="440"> | <img src="docs/images/hub-features-en.png" width="440"> |
+| **Overlay designer with live game preview** | **Hotkeys: click, then press any key** |
+| <img src="docs/images/hub-overlay-en.png" width="440"> | <img src="docs/images/hub-hotkeys-en.png" width="440"> |
+| **Teammate subtitles** | **Cloud keys (Azure and Google)** |
+| <img src="docs/images/hub-teammates-en.png" width="440"> | <img src="docs/images/hub-keys-en.png" width="440"> |
 
 <details>
-<summary><b>More screenshots: every settings page</b></summary>
+<summary><b>More screenshots: settings, self-test, phrasebook, quick text</b></summary>
 
 | | |
 |:---:|:---:|
-| General<br><img src="docs/images/settings-general-en.png" width="440"> | Microphone<br><img src="docs/images/settings-microphone-en.png" width="440"> |
-| Speech recognition<br><img src="docs/images/settings-speech-en.png" width="440"> | Translation<br><img src="docs/images/settings-translation-en.png" width="440"> |
-| Azure keys<br><img src="docs/images/settings-azure-en.png" width="440"> | Hotkeys<br><img src="docs/images/settings-hotkey-en.png" width="440"> |
-| Overlay<br><img src="docs/images/settings-overlay-en.png" width="440"> | Quick phrases<br><img src="docs/images/settings-phrases-en.png" width="440"> |
-| Correction rules<br><img src="docs/images/settings-corrections-en.png" width="440"> | Quick text box<br><img src="docs/images/settings-quicktext-en.png" width="440"> |
-| Learning mode<br><img src="docs/images/settings-learning-en.png" width="440"> | Game controller<br><img src="docs/images/settings-gamepad-en.png" width="440"> |
-| Teammate subtitles<br><img src="docs/images/settings-teammates-en.png" width="440"> | Games (auto profiles)<br><img src="docs/images/settings-games-en.png" width="440"> |
-| Built-in help<br><img src="docs/images/help-en.png" width="440"> | |
+| Settings page<br><img src="docs/images/hub-settings-en.png" width="440"> | Overlay states<br><img src="docs/images/overlay-states.png" width="440"> |
+| Self-test<br><img src="docs/images/selftest-en.png" width="400"> | My phrasebook<br><img src="docs/images/phrasebook-en.png" width="440"> |
+| Quick text box (F8)<br><img src="docs/images/quicktext-en.png" width="400"> | Built-in help<br><img src="docs/images/help-en.png" width="440"> |
+| Detailed settings: microphone<br><img src="docs/images/settings-microphone-en.png" width="440"> | Detailed settings: speech<br><img src="docs/images/settings-speech-en.png" width="440"> |
+| Detailed settings: quick phrases<br><img src="docs/images/settings-phrases-en.png" width="440"> | Detailed settings: correction rules<br><img src="docs/images/settings-corrections-en.png" width="440"> |
+| Detailed settings: games<br><img src="docs/images/settings-games-en.png" width="440"> | Detailed settings: learning mode<br><img src="docs/images/settings-learning-en.png" width="440"> |
 
 </details>
 
@@ -120,21 +123,21 @@ flowchart LR
     K["Hold F9"] --> M["Mic records<br/>(RAM only)"]
     M --> S{"Speech → text"}
     S -->|"Whisper (this PC)"| W["Arabic audio →<br/>English text"]
-    S -->|"Azure Speech"| AS["Arabic text<br/>(your dialect)"]
+    S -->|"Whisper or Azure Speech"| AS["Arabic text"]
     AS --> T{"Text → translation"}
     T -->|"Azure Translator"| AT["English or<br/>14 other languages"]
-    T -->|"Offline model"| OM["English"]
+    T -->|"Google Translate"| GT["English or<br/>14 other languages"]
     W --> O["Overlay above the game"]
     AT --> O
-    OM --> O
+    GT --> O
 ```
 
-The two steps are chosen **separately** in the launcher:
+You choose the two steps **separately** on the **Engines** page:
 
-| Step | On this PC (free, private) | Azure (cloud, most accurate for dialects) |
+| Step | On this PC (free, private) | Cloud (optional) |
 |---|---|---|
-| **1. Speech → text** | Whisper `tiny` → `large-v3`, on GPU (CUDA) or CPU | Azure Speech with 17 Arabic dialects (ar-SA, ar-JO, ar-EG, …) |
-| **2. Text → translation** | Whisper translates straight to English | Azure Translator: English or 14 other languages |
+| **1. Speech → text** | Whisper `tiny` → `large-v3`, on GPU (CUDA) or CPU | **Azure Speech**: 17 Arabic dialects (ar-SA, ar-JO, ar-EG, …) |
+| **2. Text → translation** | Whisper translates straight from your voice to English | **Azure Translator** or **Google Translate** (Standard or Translation LLM): English or 14 other languages |
 
 <a id="en-install"></a>
 
@@ -146,14 +149,14 @@ The two steps are chosen **separately** in the launcher:
    **[Releases page](https://github.com/Cavebest/GameTalk/releases/latest)**.
 2. Run it and choose **English or Arabic**. It installs to `Program Files` by default. You can
    pick *"Install for me only"* if you don't have admin rights.
-3. Optional: desktop shortcut, and start with Windows.
+3. Optional: a desktop shortcut, and start with Windows.
 
 You don't need Python. NVIDIA GPU support (cuBLAS) is included, and without an NVIDIA GPU the app
 runs on the CPU. To uninstall, go to **Windows Settings → Apps**. Your settings in
 `%APPDATA%\GameTalk` are kept.
 
-> Windows SmartScreen may warn that the app is from an *unknown publisher* because it isn't
-> code-signed. Click **More info → Run anyway**.
+> Windows SmartScreen may warn about an *unknown publisher* because the app isn't code-signed.
+> Click **More info → Run anyway**.
 
 #### Option B: from source
 
@@ -164,7 +167,8 @@ git clone https://github.com/Cavebest/GameTalk.git
 ```
 
 Then double-click **`GameTalk.bat`**. The first time, it creates `.venv` and installs everything
-(GPU support is added automatically if an NVIDIA GPU is found). After that it opens the launcher.
+(GPU support is added automatically if an NVIDIA GPU is found). After that it opens the main
+window.
 
 <details>
 <summary>Manual install</summary>
@@ -181,9 +185,9 @@ py -m venv .venv
 .venv\Scripts\python -m gametalk.launcher
 ```
 
-`[cuda]` adds NVIDIA's cuBLAS runtime so Whisper can use an NVIDIA GPU without installing the
-CUDA toolkit. Leave it off on machines without an NVIDIA GPU. cuDNN is not needed. If a GPU ever
-reports a missing `cudnn*.dll`, run `pip install nvidia-cudnn-cu12`.
+`[cuda]` adds NVIDIA's cuBLAS runtime so Whisper can use an NVIDIA GPU without the CUDA toolkit.
+Leave it off on machines without an NVIDIA GPU. cuDNN is not needed. If a GPU ever reports a
+missing `cudnn*.dll`, run `pip install nvidia-cudnn-cu12`.
 
 </details>
 
@@ -191,17 +195,18 @@ reports a missing `cudnn*.dll`, run `pip install nvidia-cudnn-cu12`.
 
 ### 🚀 First run: 5 minutes
 
-1. **Open the launcher**: the *GameTalk* shortcut, `GameTalk.exe`, or `GameTalk.bat`.
-2. **Pick your engines** (step 1 and step 2). The default is Whisper on this PC.
-3. **Settings → Microphone**: pick your real headset mic and try **Test**.
-4. Click **▶ Start GameTalk**. It moves to the system tray next to the clock.
+1. **Open GameTalk**: the desktop shortcut, `GameTalk.exe`, or `GameTalk.bat`.
+2. On **Engines**, pick who listens and who translates. The default is Whisper on this PC.
+3. **Settings → Detailed settings → Microphone**: pick your headset mic and try **Test**.
+4. On **Home**, press the big **power button**. GameTalk moves to the system tray next to the
+   clock, and the dashboard turns green: *Ready — hold F9 and speak*.
    - The first time, the Whisper model downloads once (`small` ≈ 480 MB). After that it works
      offline.
-5. In your game, **hold F9, speak Arabic, and let go**.
-6. Something not working? Run **🩺 Self-test**. It checks everything and tells you what to fix.
+5. In your game, **hold F9, speak Arabic, and let go**. The translation also appears on **Home**.
+6. Something not working? Press **Self-test**. It checks everything and tells you what to fix.
 
 > 💡 Use **Borderless** or **Windowed** fullscreen in your game. *Exclusive* fullscreen hides every
-> overlay, and GameTalk will warn you once if it detects it.
+> overlay, and GameTalk warns you once if it detects it.
 
 <a id="en-usage"></a>
 
@@ -217,6 +222,7 @@ reports a missing `cudnn*.dll`, run `pip install nvidia-cudnn-cu12`.
 | Quick phrases | Any key you assign, e.g. **Numpad1** → *"Enemy spotted!"* |
 | Controller | An Xbox/XInput button, e.g. **RB** |
 | Tray menu | Enable/Disable, profile, recent translations, settings, self-test, help, exit |
+| Main window shortcuts | **Ctrl+1 … Ctrl+8** switch pages |
 
 - **Keep talking**: you can start the next sentence while the previous one is still being
   translated. A small red dot means *"you are still recording"*.
@@ -228,51 +234,76 @@ reports a missing `cudnn*.dll`, run `pip install nvidia-cudnn-cu12`.
 
 ### 🧠 Speech and translation engines
 
-| Model | Size | Notes |
+| Whisper model | Size | Notes |
 |---|---|---|
 | `tiny` / `base` | 75–145 MB | Very fast, weaker with dialects |
 | **`small`** (default) | ~480 MB | Good balance, well under a second on GPU |
 | `medium` | ~1.5 GB | Noticeably more natural English for Gulf, Levantine and Egyptian dialects |
 | `large-v3` | ~3 GB | Most accurate local model (~3 GB VRAM) |
 
+| Translator | Cost | Best for |
+|---|---|---|
+| **Whisper** (on this PC) | Free | Privacy; works offline; English only |
+| **Azure Translator** | 2 million characters/month free | Many languages, fast |
+| **Google Translate: Standard** | 500,000 characters/month free, then $20 per million | Fast and cheap |
+| **Google Translate: Translation LLM** | $10 per million characters in + $10 out (same monthly credit) | Better with dialect and context |
+
 **Offline text translation** uses small OPUS-MT models (Arabic ⇄ English). They power the quick
-text box and teammate subtitles without Azure.
+text box and teammate subtitles without any cloud service.
 
 **Arabic dialect corrections** run before text translation and turn dialect words into standard
-Arabic (خليكم → ابقوا, هلق → الآن, …). This makes offline models and Azure much more accurate.
-The starter list is editable per game.
+Arabic (خليكم → ابقوا, هلق → الآن, …), which makes every translator more accurate. The starter
+list can be edited per game.
 
-<a id="en-azure"></a>
+<a id="en-cloud"></a>
 
-### ☁️ Azure (optional)
+### ☁️ Cloud services: Azure and Google (optional)
 
-Use Azure if you want the best accuracy for your **dialect**. The free **F0** tiers are enough
-for voice chat: 5 hours of speech and 2 million characters of translation per month. GameTalk
-counts your usage and warns at 80% and 100%.
+Everything works without the cloud. Add a service only if you want more accuracy for your
+dialect or for translation. You enter keys on the **Cloud keys** page. They are **encrypted with
+your Windows account (DPAPI)**, never logged, never exported, and never shown again after saving.
+
+#### Microsoft Azure
+
+The free **F0** tiers are enough for voice chat: 5 hours of speech and 2 million characters of
+translation per month.
 
 1. Go to [portal.azure.com](https://portal.azure.com/) → **Create a resource** → **Speech** →
    *Keys and Endpoint*. Copy **Key 1** and the **Location/Region**.
 2. **Create a resource** → **Translator**. Copy its **Key** and **Region** (`global` for a global
    resource).
-3. In the launcher, click **🔑 Azure keys**. Paste the values, click **Test connection**, then
-   **Save**.
+3. In GameTalk, open **Cloud keys**, paste them, and press **Test connection**.
 
 One *Azure AI services* multi-service resource also works: use the same key and region twice.
-Keys are **encrypted with your Windows account (DPAPI)** and are never logged or exported.
 
-| Launcher choice | What is sent to Azure |
+#### Google Translate
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com/), create a project, and turn
+   on **billing**. Google needs a card even for the free amount.
+2. **APIs & Services → Library** → enable **Cloud Translation API**.
+3. **APIs & Services → Credentials → Create API key**. It's safest to restrict the key to the
+   Cloud Translation API.
+4. In GameTalk, open **Cloud keys**, paste the key, choose **Standard** or **Translation LLM**,
+   and press **Test Google**. The LLM also needs your **Project ID**, which is on the Cloud
+   console home page.
+
+The first 500,000 characters each month are free, about 16,000 short sentences, which is more
+than enough for gaming. GameTalk counts your usage for all three services and warns at 80% and
+100%.
+
+| Engines chosen | What leaves your PC |
 |---|---|
 | Whisper + Whisper | Nothing |
-| Whisper + Azure Translator | The recognised **text** only |
-| Azure Speech + Azure Translator | Your push-to-talk **audio**, with silence trimmed, plus the text |
+| Whisper + Azure Translator / Google | The recognised **text** only |
+| Azure Speech + Azure Translator / Google | Your push-to-talk **audio** (silence trimmed) to Azure, then the text |
 
 <a id="en-features"></a>
 
 ### 🧩 All features
 
-You can switch every feature on or off in **Settings → Features on/off**. A switched-off feature
-uses no CPU, memory or network. Every feature has a **?** button with a full explanation in
-Arabic and English.
+You can switch every feature on or off on the **Features** page, which also has a search box. A
+switched-off feature uses no CPU, memory or network. Each one has a **?** button with a full
+explanation in Arabic and English.
 
 | Feature | What it does | Default |
 |---|---|:---:|
@@ -284,55 +315,46 @@ Arabic and English.
 | 🇸🇦 Arabic dialect corrections | Dialect → standard Arabic before translating | On |
 | 🔤 Pronunciation helper | Shows the English in Arabic letters: *"Wait for me"* → «وايت فور مي» | Off |
 | 🎮 Game controller | An XInput button as push-to-talk, plus an optional replay button | Off |
-| 👥 Teammate subtitles | Listens to what your PC plays and shows teammates' speech in Arabic. Uses Whisper or Azure for recognition, and the offline model or Azure for translation | Off |
-| ⌨️ Quick text box | **F8**: type Arabic, press Enter, get English. You can copy it for text chat | Off |
+| 👥 Teammate subtitles | Listens to what your PC plays and shows teammates' speech in Arabic. Recognition by Whisper or Azure; translation by the offline model, Azure or Google | Off |
+| ⌨️ Quick text box | **F8**: type Arabic, press Enter, get English you can copy into text chat | Off |
 | 🎙️ Open mic | No key needed. Voice activity detection finds the start and end of each sentence | Off |
 | 📘 Learning mode | Your phrasebook plus flash-card practice. This is the only feature that saves what you said, and only on this PC | Off |
 | 📋 Copy to clipboard | Puts each translation on the clipboard for you to paste yourself | Off |
 | 🔔 Sound cues | Soft beeps when recording starts and stops (volume adjustable) | Off |
-| 📊 Azure usage counter | Tracks this month's free quota | On |
+| 📊 Cloud usage counter | Tracks this month's free quota for Azure and Google | On |
 | 🗣️ Azure phrase list | Sends your gaming vocabulary to Azure Speech so it recognises *Medic*, *Flank*, … | On |
 | 🖥️ Fullscreen warning | Tells you once when a game uses exclusive fullscreen | On |
 | 🧷 Stuck-key protection | Stops recording even if Windows misses the key release | On |
 | ✂️ Silence trimming | Sends only the speech part to Azure: less data, faster and cheaper | On |
 | 🔔 Tray notifications | Short notices from the tray icon | On |
 
-**Tools**
-- **🩺 Self-test** checks the model, GPU, microphone, hotkeys, overlay, Azure, downloaded models,
-  controller and disk space, then suggests fixes. Its report contains no speech and no keys.
-- **Export / Import profile** shares a game profile (phrases, corrections, overlay, …) as a file.
-  Keys are never included.
-
 <a id="en-settings"></a>
 
-### 🛠️ Settings pages
+### 🖥️ The main window, page by page
 
-| Page | What you can change |
+| Page | What's there |
 |---|---|
-| General | Interface language (Arabic/English/auto), enable/disable, notifications, start with Windows, sound cues, clipboard |
-| Features on/off | Every switch from the table above, with explanations |
-| Microphone | Input device, refresh after plugging in, live level meter, 3-second test |
-| Speech recognition | Whisper model, GPU/CPU/Auto, spoken language, Azure dialect, show the original text |
-| Translation | Engine, target language, gaming mode (short, natural sentences), gaming vocabulary |
-| Azure keys | Speech key and region, Translator key and region, connection test, usage |
-| Hotkeys | Talk key (or press-to-capture), push/toggle/open mic, replay key, quick-text key |
-| Overlay | Position, offset, monitor, font, size, width, colours, opacity, corners, duration, fade, preview, drag to move |
-| Quick phrases | Key → sentence table, plus suggestions |
-| Correction rules | Your word fixes and the Arabic dialect list |
-| Quick text box | Key, and which translator (auto/offline/Azure) |
-| Learning mode | Phrasebook on/off, open the phrasebook |
-| Game controller | Talk button and replay button |
-| Teammate subtitles | Output device, recogniser, translator, target language, sensitivity, position, font and duration |
-| Games | The game `.exe` names that switch profiles automatically |
+| **Home** | Power button, live status (Ready / Listening / Translating), your last translation typing itself in, response-time chart, today's count, the path your voice takes (it lights up on every translation), free-quota gauges, quick actions and tips |
+| **Engines** | Step 1 and step 2 as cards: Whisper model and GPU/CPU, Azure dialect, target language, Google model, gaming mode, pronunciation helper. A tag always shows what leaves your PC |
+| **Features** | Every switch, with search and a count of what's on |
+| **Overlay** | A live preview over a mock game frame, updated while you drag: position (3×3 map), text size, width, background and text opacity, corners, duration, accent and text colours, outline, fade. **Show on screen** shows a sample on your real screen |
+| **Teammates** | On/off, who recognises (Whisper or Azure), who translates (offline, Azure or Google), language, sensitivity, where and how big the subtitles are |
+| **Hotkeys** | Click a keycap and press a key (or Mouse 4/5): talk key, replay key, quick text key. Hold / toggle / open mic, and controller buttons |
+| **Cloud keys** | Azure and Google keys with connection tests |
+| **Settings** | Language (Auto / English / العربية), start with Windows, notifications, sound, clipboard, profiles, tools, and **Detailed settings** (microphone, speech, quick phrases, correction rules, quick text, learning mode, games) |
+
+The classic launcher still exists: run `GameTalk.exe --classic` or
+`python -m gametalk.launcher --classic`. It also opens automatically if the new window ever fails
+to load.
 
 <a id="en-profiles"></a>
 
 ### 🎯 Profiles per game
 
 Each profile keeps its own hotkey, mode, microphone, model, engines, overlay position, size,
-opacity, font, duration, vocabulary, quick phrases and corrections. Add the game's executable
-name (Task Manager → Details, e.g. `cs2.exe`), and the profile switches on automatically when that
-game gets focus.
+opacity, font, duration, vocabulary, quick phrases and corrections. Add the game's executable name
+(Task Manager → Details, e.g. `cs2.exe`), and the profile switches on automatically when that game
+gets focus.
 
 <a id="en-privacy"></a>
 
@@ -341,12 +363,15 @@ game gets focus.
 - **Local mode sends nothing.** Recognition and translation run on your PC.
 - The **mic is open only while you hold the key**. Audio lives in RAM and is discarded after each
   sentence. Nothing is recorded to disk.
+- **Google and Azure Translator only ever get text**, never your voice. Only Azure Speech gets
+  audio, and only if you choose it.
 - **Logs** (`%APPDATA%\GameTalk\logs`) contain timings and error types only, never what you said.
-- **Azure keys** are encrypted with Windows DPAPI and never written in plain text.
+- **Keys** are encrypted with Windows DPAPI. The Google key travels in a request header, never in
+  a URL.
 - The only other network access is the one-time model download from Hugging Face, with telemetry
   off.
-- Learning mode is **opt-in**, and it is the only place sentences are stored (`phrasebook.json`,
-  on this PC).
+- Learning mode is **opt-in**, and it's the only place sentences are stored (`phrasebook.json`, on
+  this PC).
 
 <a id="en-performance"></a>
 
@@ -356,12 +381,14 @@ game gets focus.
 - The hotkey uses **Raw Input**, not keyboard hooks. It sits outside the game's input path, so it
   adds **no input latency**.
 - A translation appears **~0.1–0.3 s** after you release the key (NVIDIA GPU, `medium`).
+- The main window is a separate process: close it while you play and nothing of it stays in
+  memory.
 
 | Mode | RAM | Note |
 |---|---|---|
 | Local, GPU | ~800 MB (+ ~1 GB VRAM) | The model stays loaded for instant replies |
 | Local, CPU | ~430 MB | |
-| Azure | ~90 MB | No local model loaded |
+| Azure Speech | ~90 MB | No local model loaded |
 | + subtitles / pronunciation / controller | +~120 MB | Offline EN→AR model and dictionary |
 
 <a id="en-troubleshooting"></a>
@@ -372,14 +399,15 @@ game gets focus.
 |---|---|
 | I can't see the overlay in my game | Switch the game to **Borderless** or **Windowed** fullscreen |
 | Nothing happens when I press the key in the game | If the game runs **as administrator**, run GameTalk as administrator too |
-| "Didn't catch that" | Check the mic in **Settings → Microphone → Test**, and hold the key a moment longer |
-| The translation isn't accurate | Try `medium` or `large-v3`, or Azure Speech with your dialect, and add correction rules |
+| "Didn't catch that" | Test the mic (**Home → Test microphone**) and hold the key a moment longer |
+| The translation isn't accurate | Try Whisper `medium`/`large-v3`, Azure Speech with your dialect, or Google's Translation LLM, and add correction rules |
+| Google: "turn on billing" / "enable the API" | Do steps 1–2 of [Google Translate](#en-cloud) for the project that owns the key |
 | The first translation is slow | The first run on a new GPU compiles once (~20 s). It's instant after that |
-| Mic unplugged or changed | **Settings → Microphone → Refresh**. GameTalk also retries automatically |
-| Anything else | Run **🩺 Self-test**, then **Copy report** (safe to share) |
+| Mic unplugged or changed | **Detailed settings → Microphone → Refresh**. GameTalk also retries automatically |
+| Anything else | Run **Self-test**, then **Copy report** (safe to share) |
 
-> Some kernel-level anti-cheats dislike any overlay. GameTalk doesn't inject or hook anything,
-> but check your game's rules.
+> Some kernel-level anti-cheats dislike any overlay. GameTalk doesn't inject or hook anything, but
+> check your game's rules.
 
 <a id="en-developers"></a>
 
@@ -397,40 +425,38 @@ game gets focus.
 .venv\Scripts\ruff check .
 ```
 
-**Command line:** `python -m gametalk [--settings] [--azure] [--test-mic] [--selftest]
-[--phrasebook] [--verbose]`. If GameTalk is already running, these options are forwarded to the
-running copy.
-
-**Build the installer:** run `packaging\build_installer.bat`. It uses PyInstaller to build
-`dist\GameTalk\GameTalk.exe`, and Inno Setup 6 to build `dist\GameTalk-Setup-<version>.exe`. Set
-`GAMETALK_CUDA=0` for a smaller build without NVIDIA support.
+- **Main window:** `python -m gametalk.launcher` (Qt Quick; `--classic` for the widget launcher).
+- **Tray app:** `python -m gametalk [--settings] [--azure] [--test-mic] [--selftest] [--phrasebook]
+  [--verbose]`. If GameTalk is already running, these options are forwarded to it.
+- **Build the installer:** `packaging\build_installer.bat` builds `dist\GameTalk\GameTalk.exe`
+  with PyInstaller and `dist\GameTalk-Setup-<version>.exe` with Inno Setup 6. Set
+  `GAMETALK_CUDA=0` for a smaller build without NVIDIA support.
+- The tests load the whole QML interface off-screen and fail on any QML warning, and they check
+  that every visible string has an Arabic translation.
 
 <details>
 <summary>Project structure</summary>
 
 | Module | Role |
 |---|---|
-| `gametalk/__main__.py` | Startup, logging, single instance |
-| `gametalk/app.py` | Controller: hotkey → recorder → speech worker → overlay |
+| `gametalk/hub/` | Main window: `backend.py` (settings, live stats, actions) and `qml/` (pages and animated components) |
+| `gametalk/__main__.py` | Tray app startup, logging, single instance |
+| `gametalk/app.py` | Controller: hotkey → recorder → speech worker → overlay; `stats`/`preview` commands |
 | `gametalk/hotkey.py` | Global hotkeys via Raw Input, foreground-game watcher |
 | `gametalk/audio.py` | Push-to-talk recorder, device list, silence trimming |
 | `gametalk/speech.py` | faster-whisper on a worker thread, CUDA → CPU fallback |
 | `gametalk/translate.py` | Speech → text → translation pipelines, gaming mode, cleanup |
 | `gametalk/azure.py` | Azure Speech (REST + SDK phrase lists) and Translator v3 |
+| `gametalk/google.py` | Google Cloud Translation (Standard and Translation LLM) |
 | `gametalk/local_mt.py` | Offline OPUS-MT Arabic ⇄ English (CTranslate2) |
 | `gametalk/overlay.py` | Click-through overlay that never takes focus |
-| `gametalk/teammates.py` | Loopback capture for teammate subtitles |
-| `gametalk/voice.py` | Open-mic voice activity detection |
-| `gametalk/gamepad.py` | XInput controller buttons |
-| `gametalk/quick_text.py`, `learn.py`, `phrasebook.py` | Quick text box, learning mode |
-| `gametalk/pronounce.py` | English → Arabic-letter pronunciation (CMUdict) |
-| `gametalk/diagnostics.py` | Self-test |
-| `gametalk/launcher.py`, `settings_dialog.py`, `tray.py`, `help.py`, `theme.py` | UI |
+| `gametalk/teammates.py`, `voice.py`, `gamepad.py` | Teammate subtitles, open mic, controller |
+| `gametalk/quick_text.py`, `learn.py`, `phrasebook.py`, `pronounce.py` | Quick text, learning mode, pronunciation |
+| `gametalk/settings_dialog.py`, `launcher.py`, `tray.py`, `help.py`, `diagnostics.py`, `theme.py` | Detailed settings, classic launcher, tray, help, self-test |
 | `gametalk/i18n.py`, `i18n_ar.py` | Arabic/English interface |
-| `gametalk/config.py`, `credentials.py`, `usage.py` | Settings, DPAPI keys, Azure usage |
-| `gametalk/ipc.py`, `runtime.py`, `win32.py` | Launcher ↔ app channel, startup, Win32 bindings |
+| `gametalk/config.py`, `credentials.py`, `usage.py`, `ipc.py`, `runtime.py`, `win32.py` | Settings, DPAPI keys, quota counter, local command channel, startup, Win32 |
 | `packaging/` | PyInstaller spec, Inno Setup script, icon and version resources |
-| `tests/` | 170+ pytest tests |
+| `tests/` | 200+ pytest tests |
 
 </details>
 
@@ -440,8 +466,9 @@ running copy.
 
 Created by **[Shkour Bashtawi](https://github.com/ShkourBashtawi)**.
 Released under the **[MIT License](LICENSE)**. Third-party components (faster-whisper,
-CTranslate2, Qt/PySide6, Whisper and OPUS-MT models, Microsoft Azure services) remain under their
-own licenses and terms.
+CTranslate2, Qt/PySide6, Whisper and OPUS-MT models, Microsoft Azure and Google Cloud services)
+remain under their own licenses and terms. SteelSeries GG is only a style inspiration; GameTalk is
+not affiliated with SteelSeries.
 
 <div align="right"><a href="#english">⬆ Back to top</a></div>
 
@@ -453,6 +480,8 @@ own licenses and terms.
 
 ## 🇸🇦 العربية
 
+<p align="center"><img src="docs/images/hub-home-ar.png" alt="نافذة GameTalk الرئيسية بالعربي" width="860"></p>
+
 ### المحتويات
 
 - [شو هو GameTalk؟](#ar-what)
@@ -463,9 +492,9 @@ own licenses and terms.
 - [أول تشغيل: 5 دقائق](#ar-first-run)
 - [الاستعمال اليومي](#ar-usage)
 - [محركات التعرّف والترجمة](#ar-engines)
-- [Azure (اختياري)](#ar-azure)
+- [الخدمات السحابية: Azure و Google (اختياري)](#ar-cloud)
 - [كل الميزات](#ar-features)
-- [صفحات الإعدادات](#ar-settings)
+- [النافذة الرئيسية صفحة صفحة](#ar-settings)
 - [ملف تعريف لكل لعبة](#ar-profiles)
 - [الخصوصية](#ar-privacy)
 - [الأداء](#ar-performance)
@@ -476,7 +505,7 @@ own licenses and terms.
 
 ### 🎮 شو هو GameTalk؟
 
-GameTalk Translator برنامج صغير على ويندوز للاعبين العرب اللي بيلعبوا مع فريق بيحكي إنجليزي.
+GameTalk Translator برنامج على ويندوز للاعبين العرب اللي بيلعبوا مع فريق بيحكي إنجليزي.
 
 1. **اضغط الزر مع الاستمرار** (الافتراضي **F9**) واحكِ عربي بأي لهجة.
 2. **اترك الزر**، وخلال ثانية تقريباً بتطلع لك الجملة بإنجليزي طبيعي فوق اللعبة.
@@ -484,6 +513,8 @@ GameTalk Translator برنامج صغير على ويندوز للاعبين ا�
 3. **اقرأها بصوتك** على الفويس شات. وإذا بدك، بيعرض لك كمان طريقة نطقها بحروف عربية.
 
 وبيشتغل بالعكس كمان: **ترجمة كلام الفريق** بتعرض كلام زملائك مترجم للعربي كترجمة على الشاشة.
+
+<p align="center"><img src="docs/images/overlay-in-game.png" alt="نافذة GameTalk فوق اللعبة" width="820"></p>
 
 > **آمن مع الألعاب:** البرنامج ما بيحكي عنك، وما بيكتب شي باللعبة، وما بيدخل على ملفات اللعبة
 > أو بيعدّلها أبداً. كل اللي بيعمله إنه يسمع زره، ويرسم نافذة شفافة فوق اللعبة ما بتاخذ منها
@@ -497,35 +528,36 @@ GameTalk Translator برنامج صغير على ويندوز للاعبين ا�
 |---|---|
 | 🎙️ **ضغط مستمر أو ضغطة تشغيل/إيقاف أو مايك مفتوح** | زر كيبورد، أو زر ماوس جانبي (Mouse4/5)، أو زر يد تحكم (RB مثلاً) |
 | 💻 **بيشتغل بدون إنترنت** | Whisper بيشتغل على كرت NVIDIA أو المعالج، وما بيطلع شي من جهازك |
-| ☁️ **Azure اختياري** | Azure Speech بيفهم اللهجات، وAzure Translator للترجمة، وكل واحد بتختاره لحال |
-| 🪟 **نافذة ما بتزعجك** | الماوس بيمرّ من خلالها وما بتسرق التركيز، ومكانها وحجمها وألوانها قابلة للتخصيص لكل لعبة |
+| ☁️ **محركات سحابية اختيارية** | Azure Speech بيفهم 17 لهجة عربية، والترجمة بـ Azure Translator أو **Google Translate** (ومعه موديل Translation LLM) |
+| 🖥️ **نافذة رئيسية بإحساس برامج الجيمنغ** | غامقة ومتحركة ولوحة مباشرة، بستايل SteelSeries GG |
+| 🪟 **نافذة فوق اللعبة ما بتزعجك** | الماوس بيمرّ من خلالها وما بتسرق التركيز، وبتصمّم مكانها وحجمها وألوانها لكل لعبة مع معاينة مباشرة |
 | 👥 **ترجمة كلام الفريق** | بيترجم اللي *بتسمعه* (من اللعبة أو الديسكورد) للعربي |
 | ⌨️ **مربع الكتابة السريع** | اضغط F8 واكتب عربي، بيطلع لك إنجليزي للشات الكتابي |
 | 💬 **جمل جاهزة** | مثلاً *"Enemy spotted!"* على Numpad1، وبتظهر فوراً |
 | 📘 **وضع التعلّم** | دفتر عباراتك وبطاقات تدريب، لحتى تصير تعتمد عليه أقل مع الوقت |
-| 🇸🇦 **واجهة عربية كاملة** | من اليمين لليسار، وكل ميزة مشروحة بالعربي والإنجليزي |
+| 🇸🇦 **واجهة عربية كاملة** | من اليمين لليسار بكل مكان، وكل ميزة مشروحة بالعربي والإنجليزي |
 | 🪶 **خفيف** | 0% معالج وهو مش شغّال، والمايك بيفتح بس وإنت ضاغط الزر |
 
 <a id="ar-screenshots"></a>
 
 ### 📸 صور من البرنامج
 
-| لوحة التحكم | الإعدادات |
+| المحركات: مين يسمع ومين يترجم | الميزات: كل المفاتيح مع بحث |
 |:---:|:---:|
-| <img src="docs/images/launcher-ar.png" width="330"> | <img src="docs/images/settings-features-ar.png" width="520"> |
-| **الإعدادات: الترجمة** | **المساعدة المدمجة** |
-| <img src="docs/images/settings-translation-ar.png" width="460"> | <img src="docs/images/help-ar.png" width="460"> |
-| **الإعدادات: النافذة فوق اللعبة** | **الإعدادات: ترجمة كلام الفريق** |
-| <img src="docs/images/settings-overlay-ar.png" width="460"> | <img src="docs/images/settings-teammates-ar.png" width="460"> |
+| <img src="docs/images/hub-engines-ar.png" width="440"> | <img src="docs/images/hub-features-ar.png" width="440"> |
+| **مصمّم النافذة مع معاينة مباشرة** | **الأزرار: اضغط، وبعدين اضغط أي زر** |
+| <img src="docs/images/hub-overlay-ar.png" width="440"> | <img src="docs/images/hub-hotkeys-ar.png" width="440"> |
+| **ترجمة كلام الفريق** | **مفاتيح السحابة (Azure و Google)** |
+| <img src="docs/images/hub-teammates-ar.png" width="440"> | <img src="docs/images/hub-keys-ar.png" width="440"> |
 
 <details>
 <summary><b>صور أكثر</b></summary>
 
 | | |
 |:---:|:---:|
+| الإعدادات<br><img src="docs/images/hub-settings-ar.png" width="440"> | المساعدة المدمجة<br><img src="docs/images/help-ar.png" width="440"> |
 | مراحل النافذة: بسمع، بعالج، الترجمة<br><img src="docs/images/overlay-states.png" width="440"> | مربع الكتابة السريع (F8)<br><img src="docs/images/quicktext-en.png" width="400"> |
 | الفحص الشامل<br><img src="docs/images/selftest-en.png" width="400"> | دفتر عباراتي<br><img src="docs/images/phrasebook-en.png" width="440"> |
-| الإعدادات: عام<br><img src="docs/images/settings-general-ar.png" width="440"> | |
 
 </details>
 
@@ -538,21 +570,21 @@ flowchart LR
     K["اضغط F9"] --> M["المايك يسجّل<br/>(بالذاكرة بس)"]
     M --> S{"الكلام ← نص"}
     S -->|"Whisper على جهازك"| W["صوت عربي ←<br/>نص إنجليزي"]
-    S -->|"Azure Speech"| AS["نص عربي<br/>(حسب لهجتك)"]
+    S -->|"Whisper أو Azure Speech"| AS["نص عربي"]
     AS --> T{"النص ← ترجمة"}
     T -->|"Azure Translator"| AT["إنجليزي أو<br/>14 لغة ثانية"]
-    T -->|"موديل بدون نت"| OM["إنجليزي"]
+    T -->|"Google Translate"| GT["إنجليزي أو<br/>14 لغة ثانية"]
     W --> O["النافذة فوق اللعبة"]
     AT --> O
-    OM --> O
+    GT --> O
 ```
 
-بتختار الخطوتين **كل وحدة لحال** من لوحة التحكم:
+بتختار الخطوتين **كل وحدة لحال** من صفحة **المحركات**:
 
-| الخطوة | على جهازك (مجاني وخاص) | Azure (سحابي، الأدق للهجات) |
+| الخطوة | على جهازك (مجاني وخاص) | سحابي (اختياري) |
 |---|---|---|
-| **1. الكلام ← نص** | Whisper من `tiny` لـ `large-v3`، على كرت الشاشة (CUDA) أو المعالج | Azure Speech مع 17 لهجة عربية (ar-SA, ar-JO, ar-EG, …) |
-| **2. النص ← ترجمة** | Whisper بيترجم مباشرة للإنجليزي | Azure Translator: إنجليزي أو 14 لغة ثانية |
+| **1. الكلام ← نص** | Whisper من `tiny` لـ `large-v3`، على كرت الشاشة أو المعالج | **Azure Speech**: 17 لهجة عربية (ar-SA، ar-JO، ar-EG، …) |
+| **2. النص ← ترجمة** | Whisper بيترجم من صوتك للإنجليزي مباشرة | **Azure Translator** أو **Google Translate** (العادي أو Translation LLM): إنجليزي أو 14 لغة ثانية |
 
 <a id="ar-install"></a>
 
@@ -581,19 +613,20 @@ git clone https://github.com/Cavebest/GameTalk.git
 ```
 
 بعدين اضغط دبل كليك على **`GameTalk.bat`**. أول مرة بيجهّز كل شي لحاله (وبيضيف دعم كرت
-NVIDIA إذا لقاه)، وبعدها بيفتح لوحة التحكم.
+NVIDIA إذا لقاه)، وبعدها بيفتح النافذة الرئيسية.
 
 <a id="ar-first-run"></a>
 
 ### 🚀 أول تشغيل: 5 دقائق
 
-1. **افتح لوحة التحكم**: من اختصار *GameTalk*، أو `GameTalk.exe`، أو `GameTalk.bat`.
-2. **اختار المحركات** (الخطوة 1 والخطوة 2). الافتراضي Whisper على جهازك.
-3. **الإعدادات ← المايكروفون**: اختار مايك السماعة الحقيقي وجرّب **تجربة**.
-4. اضغط **▶ تشغيل البرنامج**، وبيصير أيقونة جنب الساعة.
+1. **افتح GameTalk**: من اختصار سطح المكتب، أو `GameTalk.exe`، أو `GameTalk.bat`.
+2. من صفحة **المحركات** اختار مين يسمع ومين يترجم. الافتراضي Whisper على جهازك.
+3. **الإعدادات ← إعدادات تفصيلية ← المايكروفون**: اختار مايك السماعة وجرّب **تجربة**.
+4. بالصفحة **الرئيسية** اضغط **زر التشغيل** الكبير. البرنامج بيصير أيقونة جنب الساعة، واللوحة
+   بتصير خضرا: *جاهز — اضغط F9 مع الاستمرار واحكِ*.
    - أول مرة بينزّل موديل Whisper مرة وحدة بس (`small` حوالي 480 ميغا). بعدها بيشتغل بدون نت.
-5. باللعبة: **اضغط F9 مع الاستمرار، احكِ عربي، واترك الزر**.
-6. في مشكلة؟ شغّل **🩺 الفحص الشامل**. بيفحص كل شي وبيحكيلك شو تصلّح.
+5. باللعبة: **اضغط F9 مع الاستمرار، احكِ عربي، واترك الزر**. الترجمة بتطلع كمان بالصفحة الرئيسية.
+6. في مشكلة؟ اضغط **الفحص الشامل**. بيفحص كل شي وبيحكيلك شو تصلّح.
 
 > 💡 خلّي اللعبة على **Borderless** أو **Windowed**. وضع ملء الشاشة *الحصري* (Exclusive
 > Fullscreen) بيخبّي أي نافذة فوق اللعبة، والبرنامج بينبّهك مرة وحدة إذا لاحظه.
@@ -612,6 +645,7 @@ NVIDIA إذا لقاه)، وبعدها بيفتح لوحة التحكم.
 | الجمل الجاهزة | أي زر بتختاره، مثلاً **Numpad1** ← *"Enemy spotted!"* |
 | يد التحكم | زر Xbox/XInput، مثلاً **RB** |
 | قائمة الأيقونة | تفعيل/إيقاف، ملف التعريف، آخر الترجمات، الإعدادات، الفحص، المساعدة، خروج |
+| اختصارات النافذة الرئيسية | **Ctrl+1 … Ctrl+8** للتنقل بين الصفحات |
 
 - **كمّل حكي**: بتقدر تبلّش الجملة الجاية والأولى لسا عم تترجم. النقطة الحمرا الصغيرة معناها
   *"لسا عم تسجّل"*.
@@ -623,47 +657,70 @@ NVIDIA إذا لقاه)، وبعدها بيفتح لوحة التحكم.
 
 ### 🧠 محركات التعرّف والترجمة
 
-| الموديل | الحجم | ملاحظات |
+| موديل Whisper | الحجم | ملاحظات |
 |---|---|---|
 | `tiny` / `base` | 75–145 ميغا | سريع جداً، أضعف مع اللهجات |
 | **`small`** (الافتراضي) | ~480 ميغا | توازن ممتاز، أقل من ثانية على كرت الشاشة |
 | `medium` | ~1.5 غيغا | إنجليزي أطبع بكثير للهجات الخليجية والشامية والمصرية |
 | `large-v3` | ~3 غيغا | الأدق محلياً (بياخذ حوالي 3 غيغا من ذاكرة الكرت) |
 
+| المترجم | السعر | الأحسن لـ |
+|---|---|---|
+| **Whisper** (على جهازك) | مجاني | الخصوصية وبدون نت؛ إنجليزي بس |
+| **Azure Translator** | 2 مليون حرف مجاناً بالشهر | لغات كثيرة وسريع |
+| **Google Translate: العادي** | 500 ألف حرف مجاناً بالشهر، وبعدها 20$ لكل مليون | سريع ورخيص |
+| **Google Translate: Translation LLM** | 10$ لكل مليون حرف داخل + 10$ طالع (من نفس الرصيد الشهري) | أحسن مع اللهجة والسياق |
+
 **الترجمة بدون نت للنصوص**: موديلات OPUS-MT صغيرة (عربي ⇄ إنجليزي)، وهي اللي بتشغّل مربع
-الكتابة السريع وترجمة كلام الفريق بدون Azure.
+الكتابة السريع وترجمة كلام الفريق بدون أي خدمة سحابية.
 
 **تصحيح اللهجة**: قبل ترجمة النص، البرنامج بيحوّل كلمات اللهجة للفصحى (خليكم ← ابقوا، هلق ←
-الآن، …)، وهاد بيخلّي الترجمة أدق بكثير. في قائمة جاهزة، وبتقدر تعدّلها لكل لعبة.
+الآن، …)، وهاد بيخلّي أي مترجم أدق. في قائمة جاهزة، وبتقدر تعدّلها لكل لعبة.
 
-<a id="ar-azure"></a>
+<a id="ar-cloud"></a>
 
-### ☁️ Azure (اختياري)
+### ☁️ الخدمات السحابية: Azure و Google (اختياري)
 
-استعمل Azure إذا بدك أعلى دقة **للهجتك**. الخطة المجانية **F0** بتكفي للفويس شات: 5 ساعات
-كلام و2 مليون حرف ترجمة بالشهر. البرنامج بيعدّ استهلاكك وبينبّهك عند 80% و100%.
+كل شي بيشتغل بدون سحابة. ضيف خدمة بس إذا بدك دقة أعلى للهجتك أو للترجمة. المفاتيح بتحطها من
+صفحة **مفاتيح السحابة**، وبتنحفظ **مشفّرة بحساب ويندوز تبعك (DPAPI)**، وما بتنكتب بالسجلات،
+وما بتطلع مع التصدير، وما بتبيّن مرة ثانية بعد الحفظ.
+
+#### Microsoft Azure
+
+الخطة المجانية **F0** بتكفي للفويس شات: 5 ساعات كلام و2 مليون حرف ترجمة بالشهر.
 
 1. ادخل على [portal.azure.com](https://portal.azure.com/) ← **Create a resource** ← **Speech** ←
    *Keys and Endpoint*، وانسخ **Key 1** و **Location/Region**.
 2. **Create a resource** ← **Translator**، وانسخ **Key** و **Region** (`global` إذا كان عالمي).
-3. من لوحة التحكم اضغط **🔑 مفاتيح Azure**، الصق المفاتيح، اضغط **اختبار الاتصال** وبعدين
-   **حفظ**.
+3. بـ GameTalk افتح **مفاتيح السحابة**، الصقهم، واضغط **اختبار الاتصال**.
 
 ممكن كمان تستعمل مورد *Azure AI services* واحد لكل شي: حط نفس المفتاح والمنطقة بالمكانين.
-المفاتيح **مشفّرة بحساب ويندوز تبعك (DPAPI)**، وما بتنكتب بالسجلات وما بتطلع مع التصدير.
 
-| اختيارك بلوحة التحكم | شو بيروح لـ Azure |
+#### Google Translate
+
+1. ادخل على [console.cloud.google.com](https://console.cloud.google.com/)، أنشئ مشروع وفعّل
+   **الدفع (Billing)**. جوجل بتطلب بطاقة حتى للكمية المجانية.
+2. **APIs & Services ← Library** ← فعّل **Cloud Translation API**.
+3. **APIs & Services ← Credentials ← Create API key**، والأفضل تقيّده على Cloud Translation API.
+4. بـ GameTalk افتح **مفاتيح السحابة**، الصق المفتاح، اختار **العادي** أو **Translation LLM**،
+   واضغط **اختبار Google**. موديل LLM بده كمان **رقم المشروع (Project ID)**، وتلاقيه بالصفحة
+   الرئيسية للـ Cloud console.
+
+أول 500 ألف حرف كل شهر مجانية، يعني تقريباً 16 ألف جملة قصيرة، وهاد أكثر من كافي للعب. البرنامج
+بيعدّ استهلاكك للخدمات الثلاث وبينبّهك عند 80% و100%.
+
+| اختيارك | شو بيطلع من جهازك |
 |---|---|
 | Whisper + Whisper | ولا شي |
-| Whisper + Azure Translator | **النص** بس |
-| Azure Speech + Azure Translator | **صوتك** وقت الضغط (بعد قص الصمت) والنص |
+| Whisper + Azure Translator / Google | **النص** المفهوم بس |
+| Azure Speech + Azure Translator / Google | **صوتك** وقت الضغط (بعد قص الصمت) لـ Azure، وبعدين النص |
 
 <a id="ar-features"></a>
 
 ### 🧩 كل الميزات
 
-كل ميزة بتقدر تشغّلها أو توقفها من **الإعدادات ← تشغيل وإيقاف الميزات**. الميزة الموقّفة ما
-بتستهلك معالج ولا ذاكرة ولا إنترنت، وكل ميزة إلها زر **؟** بشرح كامل بالعربي والإنجليزي.
+كل ميزة بتقدر تشغّلها أو توقفها من صفحة **الميزات** (وفيها بحث). الميزة الموقّفة ما بتستهلك
+معالج ولا ذاكرة ولا إنترنت، وكل ميزة إلها زر **؟** بشرح كامل بالعربي والإنجليزي.
 
 | الميزة | شو بتعمل | افتراضياً |
 |---|---|:---:|
@@ -675,46 +732,36 @@ NVIDIA إذا لقاه)، وبعدها بيفتح لوحة التحكم.
 | 🇸🇦 تصحيح اللهجة العربية | بيحوّل اللهجة لفصحى قبل الترجمة | شغّالة |
 | 🔤 مساعد النطق | بيكتب الإنجليزي بحروف عربية: *"Wait for me"* ← «وايت فور مي» | موقّفة |
 | 🎮 يد التحكم | زر بيد التحكم للتحدث، وزر للإعادة (اختياري) | موقّفة |
-| 👥 ترجمة كلام الفريق | بيسمع صوت الجهاز وبيعرض كلام الفريق بالعربي. التعرّف بـ Whisper أو Azure، والترجمة بالموديل المحلي أو Azure | موقّفة |
+| 👥 ترجمة كلام الفريق | بيسمع صوت الجهاز وبيعرض كلام الفريق بالعربي. التعرّف بـ Whisper أو Azure، والترجمة بالموديل المحلي أو Azure أو Google | موقّفة |
 | ⌨️ مربع الكتابة السريع | **F8**: اكتب عربي واضغط Enter، بيطلع لك إنجليزي تنسخه للشات | موقّفة |
 | 🎙️ المايك المفتوح | بدون زر، البرنامج بيعرف لحاله بداية ونهاية كل جملة | موقّفة |
 | 📘 وضع التعلّم | دفتر عباراتك وبطاقات تدريب. هاي الميزة الوحيدة اللي بتحفظ شو حكيت، وعلى جهازك بس | موقّفة |
 | 📋 النسخ للحافظة | كل ترجمة بتنحط بالحافظة لتلصقها إنت | موقّفة |
 | 🔔 أصوات التنبيه | صوت خفيف لما يبلّش ويخلص التسجيل (والصوت قابل للتعديل) | موقّفة |
-| 📊 عدّاد استهلاك Azure | بيحسب استهلاكك من الخطة المجانية هالشهر | شغّالة |
+| 📊 عدّاد الاستهلاك السحابي | بيحسب استهلاكك من الحصة المجانية لـ Azure و Google هالشهر | شغّالة |
 | 🗣️ كلمات الألعاب لـ Azure | بيبعث كلمات الألعاب لـ Azure Speech ليفهم *Medic* و *Flank* وغيرها | شغّالة |
 | 🖥️ تنبيه ملء الشاشة | بينبّهك مرة وحدة إذا اللعبة على ملء الشاشة الحصري | شغّالة |
 | 🧷 الحماية من الزر العالق | بيوقف التسجيل حتى لو ويندوز ما وصّل ترك الزر | شغّالة |
 | ✂️ قص الصمت | بيبعث لـ Azure الجزء اللي فيه كلام بس: بيانات أقل، أسرع، وأرخص | شغّالة |
 | 🔔 إشعارات الأيقونة | ملاحظات قصيرة من أيقونة البرنامج | شغّالة |
 
-**أدوات**
-- **🩺 الفحص الشامل** بيفحص الموديل وكرت الشاشة والمايك والأزرار والنافذة وAzure والموديلات
-  المنزّلة ويد التحكم والمساحة، وبيقترح الحل. التقرير ما فيه كلامك ولا مفاتيحك.
-- **تصدير/استيراد ملف التعريف**: شارك إعدادات لعبة (الجمل، التصحيحات، شكل النافذة…) كملف.
-  المفاتيح ما بتنضاف أبداً.
-
 <a id="ar-settings"></a>
 
-### 🛠️ صفحات الإعدادات
+### 🖥️ النافذة الرئيسية صفحة صفحة
 
 | الصفحة | شو فيها |
 |---|---|
-| عام | لغة الواجهة (عربي/إنجليزي/تلقائي)، التفعيل، الإشعارات، التشغيل مع ويندوز، الأصوات، الحافظة |
-| تشغيل وإيقاف الميزات | كل مفاتيح الميزات مع الشرح |
-| المايكروفون | اختيار المايك، التحديث بعد التوصيل، مؤشر الصوت، تجربة 3 ثواني |
-| التعرّف على الكلام | موديل Whisper، كرت الشاشة/المعالج/تلقائي، لغة الكلام، لهجة Azure، عرض النص الأصلي |
-| الترجمة | المحرك، اللغة الهدف، وضع الألعاب (جمل قصيرة وطبيعية)، كلمات الألعاب |
-| مفاتيح Azure | مفتاح ومنطقة Speech، ومفتاح ومنطقة Translator، اختبار الاتصال، الاستهلاك |
-| الأزرار | زر التحدث (أو التقاط زر)، ضغط مستمر/ضغطة/مايك مفتوح، زر الإعادة، زر الكتابة السريعة |
-| النافذة فوق اللعبة | المكان، الإزاحة، الشاشة، الخط، الحجم، العرض، الألوان، الشفافية، الزوايا، المدة، الحركة، المعاينة، السحب |
-| الجمل الجاهزة | جدول زر ← جملة، مع الاقتراحات |
-| قواعد التصحيح | تصحيحاتك وقائمة اللهجة العربية |
-| مربع الكتابة السريع | الزر، ومين يترجم (تلقائي/بدون نت/Azure) |
-| وضع التعلّم | تشغيل دفتر العبارات وفتحه |
-| يد التحكم | زر التحدث وزر الإعادة |
-| ترجمة كلام الفريق | جهاز الصوت، التعرّف، الترجمة، اللغة، الحساسية، المكان، الخط، المدة |
-| الألعاب | أسماء ملفات الألعاب (`.exe`) اللي بتبدّل ملف التعريف تلقائياً |
+| **الرئيسية** | زر التشغيل، الحالة المباشرة (جاهز / عم يسمع / عم يترجم)، آخر ترجمة وهي عم تنكتب قدامك، رسم سرعة الرد، عدد ترجمات اليوم، طريق صوتك (بيضوي مع كل ترجمة)، دوائر الحصة المجانية، إجراءات سريعة ونصائح |
+| **المحركات** | الخطوة 1 و 2 كبطاقات: موديل Whisper وكرت الشاشة/المعالج، لهجة Azure، لغة الترجمة، موديل جوجل، وضع الألعاب، مساعد النطق. وفي علامة بتوضحلك دايماً شو بيطلع من جهازك |
+| **الميزات** | كل المفاتيح مع بحث وعدّاد للشغّال منها |
+| **النافذة فوق اللعبة** | معاينة مباشرة فوق صورة لعبة، بتتغير وإنت عم تسحب: المكان (خريطة 3×3)، حجم النص، العرض، شفافية الخلفية والنص، الزوايا، المدة، الألوان، الإطار، الحركة. وزر **اعرضها على الشاشة** بيعرض نموذج على شاشتك الحقيقية |
+| **الفريق** | تشغيل/إيقاف، مين يتعرّف (Whisper أو Azure)، مين يترجم (محلي أو Azure أو Google)، اللغة، الحساسية، مكان وحجم الترجمة |
+| **الأزرار** | اضغط على الزر المرسوم وبعدين اضغط أي زر (أو Mouse 4/5): زر التحدث، زر الإعادة، زر الكتابة السريعة. وضع الضغط المستمر/الضغطة/المايك المفتوح، وأزرار يد التحكم |
+| **مفاتيح السحابة** | مفاتيح Azure و Google مع اختبار الاتصال |
+| **الإعدادات** | اللغة (تلقائي / English / العربية)، التشغيل مع ويندوز، الإشعارات، الصوت، الحافظة، ملفات التعريف، الأدوات، و**الإعدادات التفصيلية** (المايكروفون، الكلام، الجمل الجاهزة، قواعد التصحيح، الكتابة السريعة، وضع التعلّم، الألعاب) |
+
+لوحة التحكم القديمة لسا موجودة: شغّل `GameTalk.exe --classic`. وبتفتح لحالها إذا النافذة الجديدة
+ما قدرت تفتح لأي سبب.
 
 <a id="ar-profiles"></a>
 
@@ -731,8 +778,10 @@ NVIDIA إذا لقاه)، وبعدها بيفتح لوحة التحكم.
 - **الوضع المحلي ما بيبعث ولا شي.** التعرّف والترجمة على جهازك.
 - **المايك بيفتح بس وإنت ضاغط الزر.** الصوت بالذاكرة وبينحذف بعد كل جملة، وما بينحفظ شي على
   الهارد.
+- **Google و Azure Translator بياخذوا نص بس**، وأبداً مش صوتك. Azure Speech بس بياخذ صوت، وبس
+  إذا اخترته.
 - **السجلات** (`%APPDATA%\GameTalk\logs`) فيها أوقات وأنواع أخطاء بس، وأبداً مش كلامك.
-- **مفاتيح Azure** مشفّرة بـ DPAPI، وما بتنكتب كنص عادي.
+- **المفاتيح** مشفّرة بـ DPAPI، ومفتاح جوجل بيروح داخل الطلب نفسه (header)، مش بالرابط.
 - الاتصال الوحيد غير هيك هو تنزيل الموديل أول مرة من Hugging Face، والتتبّع مقفول.
 - وضع التعلّم **اختياري**، وهو المكان الوحيد اللي بتنحفظ فيه جمل (`phrasebook.json` على جهازك).
 
@@ -743,14 +792,14 @@ NVIDIA إذا لقاه)، وبعدها بيفتح لوحة التحكم.
 - **المعالج وقت الراحة: 0%.** ما في أي فحص متكرر أو مؤقتات، والمايك مسكّر.
 - الزر بيشتغل عن طريق **Raw Input** مش hooks، يعني برّا مسار إدخال اللعبة، فما بيضيف **أي
   تأخير** على الماوس أو الكيبورد.
-- الترجمة بتظهر خلال **0.1 لـ 0.3 ثانية** تقريباً بعد ما تترك الزر (كرت NVIDIA، موديل
-  `medium`).
+- الترجمة بتظهر خلال **0.1 لـ 0.3 ثانية** تقريباً بعد ما تترك الزر (كرت NVIDIA، موديل `medium`).
+- النافذة الرئيسية برنامج منفصل: سكّرها وإنت بتلعب وما بيضل منها شي بالذاكرة.
 
 | الوضع | الرام | ملاحظة |
 |---|---|---|
 | محلي، كرت شاشة | ~800 ميغا (+ ~1 غيغا من ذاكرة الكرت) | الموديل بيضل محمّل للرد الفوري |
 | محلي، معالج | ~430 ميغا | |
-| Azure | ~90 ميغا | ما في موديل محلي |
+| Azure Speech | ~90 ميغا | ما في موديل محلي |
 | + ترجمة الفريق / النطق / يد التحكم | +~120 ميغا | موديل ترجمة إنجليزي ← عربي وقاموس |
 
 <a id="ar-troubleshooting"></a>
@@ -761,11 +810,12 @@ NVIDIA إذا لقاه)، وبعدها بيفتح لوحة التحكم.
 |---|---|
 | ما بشوف النافذة باللعبة | خلّي اللعبة **Borderless** أو **Windowed** |
 | الزر ما بيشتغل جوّا اللعبة | إذا اللعبة شغّالة **كمسؤول (Administrator)**، شغّل البرنامج كمسؤول كمان |
-| بيطلع "ما فهمت" | جرّب المايك من **الإعدادات ← المايكروفون ← تجربة**، واضغط الزر شوي أطول |
-| الترجمة مش دقيقة | جرّب `medium` أو `large-v3`، أو Azure Speech مع لهجتك، وضيف قواعد تصحيح |
+| بيطلع "ما فهمت" | جرّب المايك (**الرئيسية ← تجربة الميكروفون**)، واضغط الزر شوي أطول |
+| الترجمة مش دقيقة | جرّب Whisper `medium`/`large-v3`، أو Azure Speech مع لهجتك، أو Translation LLM من جوجل، وضيف قواعد تصحيح |
+| جوجل: "فعّل الدفع" / "فعّل الـ API" | اعمل الخطوة 1 و 2 من [Google Translate](#ar-cloud) للمشروع اللي إله المفتاح |
 | أول ترجمة بطيئة | أول مرة على كرت جديد بيجهّز حاله مرة وحدة (~20 ثانية)، وبعدها فوري |
-| فصلت المايك أو غيّرته | **الإعدادات ← المايكروفون ← تحديث**، والبرنامج كمان بيعيد المحاولة لحاله |
-| أي شي ثاني | شغّل **🩺 الفحص الشامل** وبعدين **نسخ التقرير** (آمن للمشاركة) |
+| فصلت المايك أو غيّرته | **الإعدادات التفصيلية ← المايكروفون ← تحديث**، والبرنامج كمان بيعيد المحاولة لحاله |
+| أي شي ثاني | شغّل **الفحص الشامل** وبعدين **نسخ التقرير** (آمن للمشاركة) |
 
 > بعض أنظمة مكافحة الغش القوية ما بتحب أي نافذة فوق اللعبة. GameTalk ما بيدخل على اللعبة أبداً،
 > بس تأكد من قوانين لعبتك.
@@ -776,7 +826,8 @@ NVIDIA إذا لقاه)، وبعدها بيفتح لوحة التحكم.
 
 من تطوير **[Shkour Bashtawi](https://github.com/ShkourBashtawi)**.
 مرخّص بموجب **[رخصة MIT](LICENSE)**. المكوّنات الخارجية (faster-whisper، CTranslate2،
-Qt/PySide6، موديلات Whisper و OPUS-MT، وخدمات Microsoft Azure) إلها تراخيصها وشروطها الخاصة.
+Qt/PySide6، موديلات Whisper و OPUS-MT، وخدمات Microsoft Azure و Google Cloud) إلها تراخيصها
+وشروطها الخاصة. ستايل SteelSeries GG مصدر إلهام بس، و GameTalk مش تابع لـ SteelSeries.
 
 <div align="left"><a href="#arabic">⬆ للأعلى</a></div>
 

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Shkour Bashtawi (github.com/ShkourBashtawi). MIT License.
-"""One dark theme for every window (launcher, settings, tray menu, dialogs).
+"""One dark theme for the widget windows (tray menu, help, self-test, phrasebook, dialogs).
 
 Applied per window (never app-wide) so the transparent overlay is never touched. Pure Qt style
 sheets: no extra dependency, nothing runs after the window is painted.

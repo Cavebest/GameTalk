@@ -132,6 +132,51 @@ ScrollPage {
         TestResults { lines: page.googleResult }
     }
 
+    Card {
+        Layout.fillWidth: true
+        padding: 20
+        RowLayout {
+            Layout.fillWidth: true
+            Caption { text: hub.t("Free quota used this month"); Layout.fillWidth: true }
+            Btn { text: hub.t("Reset counter"); icon: Icons.refresh; small: true; kind: "subtle"; onClicked: hub.resetUsage() }
+        }
+        Repeater {
+            model: [
+                {name: "Azure Speech", value: (hub.stats.usage || {}).speech || 0, note: hub.t("5 hours of audio")},
+                {name: "Azure Translator", value: (hub.stats.usage || {}).translator || 0, note: hub.t("2 million characters")},
+                {name: "Google Translate", value: (hub.stats.usage || {}).google || 0, note: hub.t("500,000 characters")}
+            ]
+            delegate: ColumnLayout {
+                required property var modelData
+                Layout.fillWidth: true
+                spacing: 4
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text { text: modelData.name; color: Theme.text; font.pixelSize: 13; Layout.fillWidth: true }
+                    Text { text: Math.round(modelData.value * 100) + "% · " + modelData.note; color: Theme.muted; font.pixelSize: 12 }
+                }
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 6
+                    radius: 3
+                    color: Theme.track
+                    Rectangle {
+                        height: parent.height
+                        radius: 3
+                        width: parent.width * Math.min(1, modelData.value)
+                        x: hub.rtl ? parent.width - width : 0
+                        color: modelData.value >= 1 ? Theme.danger : modelData.value >= 0.8 ? Theme.warn : Theme.accent
+                        Behavior on width { NumberAnimation { duration: 700; easing.type: Easing.OutCubic } }
+                    }
+                }
+            }
+        }
+        SettingRow {
+            title: hub.t("Usage counter and quota warnings")
+            Toggle { checked: page.cfg.features.azure_usage_tracking; onToggled: function(on) { hub.set("features.azure_usage_tracking", on) } }
+        }
+    }
+
     RowLayout {
         Layout.fillWidth: true
         spacing: 10

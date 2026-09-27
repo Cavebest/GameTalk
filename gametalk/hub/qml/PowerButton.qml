@@ -75,7 +75,7 @@ Item {
         Icon {
             anchors.centerIn: parent
             visible: !pb.busy
-            path: pb.running ? (m.containsMouse ? Icons.stop : Icons.power) : Icons.power
+            path: pb.running ? (m.containsMouse ? Icons.pause : Icons.power) : Icons.power
             size: 34
             stroke: 2.4
             color: pb.running ? (m.containsMouse ? Theme.danger : Theme.ok) : "#ffffff"
@@ -97,5 +97,6 @@ Item {
         onClicked: pb.clicked()
     }
     Accessible.role: Accessible.Button
-    Accessible.name: running ? hub.t("Stop GameTalk") : hub.t("Start GameTalk")
+    Accessible.name: running ? hub.t("Pause GameTalk") : hub.t("Turn GameTalk on")
+    Tip { visible: m.containsMouse; text: pb.running ? hub.t("Pause GameTalk") : hub.t("Turn GameTalk on") }
 }

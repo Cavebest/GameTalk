@@ -83,7 +83,7 @@ class GoogleClient:
 
     def translate(self, text: str, source: str | None, target: str) -> str:
         if not self.creds.has_key:
-            raise GoogleError("Add your Google Translate API key in Settings > Cloud keys.")
+            raise GoogleError("Add your Google Translate API key on the Cloud keys page.")
         if not self.creds.ready:
             raise GoogleError("Google Translation LLM needs your Google Cloud project ID.")
         body = {

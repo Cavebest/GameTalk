@@ -1,8 +1,9 @@
 # Copyright (c) 2026 Shkour Bashtawi (github.com/ShkourBashtawi). MIT License.
-"""Tiny local command channel so the launcher (or a second launch) can drive the running app.
+"""Tiny local command channel so a second launch (or a script) can drive the running app.
 
 Uses a per-user Windows named pipe via QLocalServer. Nothing listens on the network.
-Commands: status, settings, settings:azure, test, reload, hello, quit.
+Commands: show, status, stats, settings[:page], test, reload, preview, selftest, phrasebook,
+hello, quit.
 """
 
 from __future__ import annotations

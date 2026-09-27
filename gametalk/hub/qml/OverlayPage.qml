@@ -11,6 +11,8 @@ ScrollPage {
     readonly property var cfg: hub.config
     readonly property var prof: cfg.profile
     readonly property var style: cfg.overlay
+    property bool moving: false
+    Component.onDestruction: if (moving) hub.moveOverlay(false)
 
     GridLayout {
         Layout.fillWidth: true
@@ -33,8 +35,8 @@ ScrollPage {
                 Layout.fillWidth: true
                 Layout.preferredHeight: width * 9 / 16
                 position: page.prof.overlay_position
-                offsetX: page.prof.overlay_offset_x
-                offsetY: page.prof.overlay_offset_y
+                offsetX: offX.value
+                offsetY: offY.value
                 fontSize: fontS.value
                 maxWidth: widthS.value
                 bgOpacity: bgS.value / 100
@@ -55,7 +57,13 @@ ScrollPage {
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                 }
-                Btn { text: hub.t("Move with the mouse"); icon: Icons.move; small: true; kind: "subtle"; onClicked: hub.openSettings("overlay") }
+                Btn {
+                    text: page.moving ? hub.t("Done") : hub.t("Move with the mouse")
+                    icon: page.moving ? Icons.check : Icons.move
+                    small: true
+                    kind: page.moving ? "primary" : "subtle"
+                    onClicked: { page.moving = !page.moving; hub.moveOverlay(page.moving) }
+                }
             }
         }
 
@@ -95,8 +103,18 @@ ScrollPage {
                         current: page.style.text_color
                         onPicked: function(c) { hub.set("overlay.text_color", c) }
                     }
+                    Caption { text: hub.t("Background colour"); Layout.topMargin: 6 }
+                    Swatches {
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 150
+                        colors: ["#0c0e14", "#000000", "#1a1025", "#0b1d2a"]
+                        current: page.style.background_color
+                        onPicked: function(c) { hub.set("overlay.background_color", c) }
+                    }
                 }
             }
+            LabeledSlider { id: offX; title: hub.t("Sideways shift"); from: -800; to: 800; stepSize: 10; bound: page.prof.overlay_offset_x; unit: " px"; onCommitted: function(v) { hub.set("profile.overlay_offset_x", v) } }
+            LabeledSlider { id: offY; title: hub.t("Distance from the edge"); from: -200; to: 800; stepSize: 4; bound: page.prof.overlay_offset_y; unit: " px"; onCommitted: function(v) { hub.set("profile.overlay_offset_y", v) } }
             LabeledSlider { id: fontS; title: hub.t("Text size"); from: 10; to: 40; bound: page.prof.font_size; unit: " pt"; onCommitted: function(v) { hub.set("profile.font_size", v) } }
             LabeledSlider { id: widthS; title: hub.t("Maximum width"); from: 300; to: 1600; stepSize: 20; bound: page.prof.max_width; unit: " px"; onCommitted: function(v) { hub.set("profile.max_width", v) } }
             LabeledSlider { id: bgS; title: hub.t("Background"); from: 0; to: 100; bound: Math.round(page.prof.background_opacity * 100); unit: "%"; onCommitted: function(v) { hub.set("profile.background_opacity", v / 100) } }
@@ -118,6 +136,28 @@ ScrollPage {
             SettingRow {
                 title: hub.t("Fade in and out")
                 Toggle { checked: page.style.animation; onToggled: function(on) { hub.set("overlay.animation", on) } }
+            }
+            SettingRow {
+                title: hub.t("Font")
+                Dropdown {
+                    width: 200
+                    items: hub.options("fonts")
+                    current: page.style.font_family
+                    onPicked: function(v) { hub.set("overlay.font_family", v) }
+                }
+            }
+            SettingRow {
+                title: hub.t("Monitor")
+                Dropdown {
+                    width: 200
+                    items: hub.options("monitors")
+                    current: page.style.monitor
+                    onPicked: function(v) { hub.set("overlay.monitor", v) }
+                }
+            }
+            SettingRow {
+                title: hub.t("Warn when a game is in exclusive fullscreen")
+                Toggle { checked: page.cfg.features.fullscreen_warning; onToggled: function(on) { hub.set("features.fullscreen_warning", on) } }
             }
         }
     }

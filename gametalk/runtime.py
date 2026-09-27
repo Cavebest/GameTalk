@@ -1,7 +1,8 @@
 # Copyright (c) 2026 Shkour Bashtawi (github.com/ShkourBashtawi). MIT License.
-"""How to start GameTalk's two processes, from source (python -m …) or the installed .exe.
+"""How to start GameTalk, from source (python -m …) or the installed .exe.
 
-Installed build: GameTalk.exe opens the launcher; "GameTalk.exe --app" runs the tray app.
+Installed build: GameTalk.exe opens GameTalk with its window; "GameTalk.exe --app" starts it in
+the tray only (Windows startup).
 """
 
 from __future__ import annotations

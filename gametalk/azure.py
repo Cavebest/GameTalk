@@ -107,7 +107,7 @@ class AzureClient:
         phrase lists; without them (or if the SDK is missing) the lighter REST API is used.
         """
         if not self.creds.has_speech:
-            raise AzureError("Add your Azure Speech key and region in Settings > Azure.")
+            raise AzureError("Add your Azure Speech key and region on the Cloud keys page.")
         if phrases:
             try:
                 return recognize_with_phrases(self.creds, audio, locale, phrases)
@@ -138,7 +138,7 @@ class AzureClient:
 
     def translate(self, text: str, source: str | None, target: str) -> str:
         if not self.creds.has_translator:
-            raise AzureError("Add your Azure Translator key in Settings > Azure.")
+            raise AzureError("Add your Azure Translator key on the Cloud keys page.")
         params = {"api-version": "3.0", "to": target}
         if source:
             params["from"] = source

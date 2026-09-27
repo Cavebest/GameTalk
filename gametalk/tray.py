@@ -65,16 +65,6 @@ def about_html() -> str:
     )
 
 
-def open_launcher() -> None:
-    """Start the launcher window (a separate lightweight process)."""
-    from .runtime import launcher_command, spawn
-
-    try:
-        spawn(launcher_command())
-    except OSError:
-        pass
-
-
 def show_about() -> None:
     box = QMessageBox()
     theme.apply(box)
@@ -112,8 +102,8 @@ class Tray(QObject):
 
     def _build_menu(self) -> None:
         menu = QMenu()
-        title = menu.addAction(tr(APP_NAME))
-        title.setEnabled(False)
+        open_app = menu.addAction(tr("Open GameTalk"), self.settings_requested.emit)
+        menu.setDefaultAction(open_app)  # bold, like other apps' "open" item
         menu.addSeparator()
         self._enabled = QAction(tr("Enabled"), menu, checkable=True)
         self._enabled.setChecked(self._enabled_state)
@@ -124,12 +114,10 @@ class Tray(QObject):
         self._profile_group.setExclusive(True)
         self._history_menu = menu.addMenu(tr("Recent translations"))
         menu.addSeparator()
-        menu.addAction(tr("Settings…"), self.settings_requested.emit)
         menu.addAction(tr("Test microphone"), self.test_requested.emit)
         menu.addAction(tr("Reload speech model"), self.reload_requested.emit)
         menu.addAction(tr("Self-test"), self.selftest_requested.emit)
         menu.addAction(tr("My phrasebook"), self.phrasebook_requested.emit)
-        menu.addAction(tr("Open launcher"), open_launcher)
         menu.addSeparator()
         menu.addAction(tr("Help"), self.help_requested.emit)
         menu.addAction(tr("About…"), show_about)
@@ -199,5 +187,8 @@ class Tray(QObject):
         self.icon.showMessage(tr(APP_NAME), message, kind, 4000)
 
     def _on_activated(self, reason) -> None:
-        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+        if reason in (
+            QSystemTrayIcon.ActivationReason.Trigger,
+            QSystemTrayIcon.ActivationReason.DoubleClick,
+        ):
             self.settings_requested.emit()

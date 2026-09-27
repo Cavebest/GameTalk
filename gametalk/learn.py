@@ -68,7 +68,7 @@ class LearnDialog(QDialog):
             warn = QLabel(
                 tr(
                     "Learning mode is off: phrases are only kept until GameTalk closes. "
-                    "Turn it on in Settings → Features to keep your phrasebook."
+                    "Turn it on on the Settings page to keep your phrasebook."
                 )
             )
             warn.setObjectName("warn")
@@ -140,7 +140,7 @@ class LearnDialog(QDialog):
             QMessageBox.information(
                 self,
                 tr(APP_NAME),
-                tr("Added. Give them keys in Settings → Quick phrases."),
+                tr("Added. Give them keys on the Phrases and words page."),
             )
 
     def _remove_selected(self) -> None:

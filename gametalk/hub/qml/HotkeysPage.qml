@@ -24,6 +24,7 @@ ScrollPage {
                 Caption { text: hub.t("Talk key") }
                 KeyCapture {
                     id: talkKey
+                    target: "talk"
                     implicitWidth: 150
                     current: page.prof.hotkey
                     allowed: page.keys
@@ -89,6 +90,7 @@ ScrollPage {
             }
             KeyCapture {
                 id: replayKey
+                target: "replay"
                 implicitWidth: 130
                 current: page.f.replay_hotkey
                 allowed: page.keys
@@ -112,6 +114,7 @@ ScrollPage {
             }
             KeyCapture {
                 id: textKey
+                target: "quicktext"
                 implicitWidth: 130
                 current: page.f.quick_text_hotkey
                 allowed: page.keys
@@ -163,6 +166,28 @@ ScrollPage {
                     }
                 }
             }
+        }
+    }
+
+    Card {
+        Layout.fillWidth: true
+        SettingRow {
+            icon: Icons.refresh
+            title: hub.t("Controller replay button")
+            desc: hub.t("Optional: a second controller button that shows your last translation again.")
+            Dropdown {
+                width: 200
+                enabled: page.f.gamepad_enabled
+                items: hub.options("gamepadReplay")
+                current: page.f.gamepad_replay_button
+                onPicked: function(v) { hub.set("features.gamepad_replay_button", v) }
+            }
+        }
+        SettingRow {
+            icon: Icons.shield
+            title: hub.t("Stuck-key protection")
+            desc: hub.t("Stops the recording even if Windows misses the moment you let go of the key.")
+            Toggle { checked: page.f.stuck_key_protection; onToggled: function(on) { hub.set("features.stuck_key_protection", on) } }
         }
     }
 

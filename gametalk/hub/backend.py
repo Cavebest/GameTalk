@@ -1,15 +1,17 @@
 # Copyright (c) 2026 Shkour Bashtawi (github.com/ShkourBashtawi). MIT License.
-"""The hub window's Python side: settings, live numbers and actions for the QML interface.
+"""The main window's Python side: settings, live numbers and actions for the QML interface.
 
-The hub is a separate, short-lived process (like the old launcher). It edits config.json and
-asks the running app to reload; live numbers come from the app over the local command channel
-(ipc.py, "stats"). API keys never reach QML: the interface only learns whether one is saved.
+It lives inside the GameTalk app (the tray process) and talks to the Controller directly.
+Every change is applied and saved immediately. API keys never reach QML: the interface only
+learns whether one is saved.
 """
 
 from __future__ import annotations
 
+import copy
 import json
 import logging
+import pathlib
 import subprocess
 import threading
 from dataclasses import asdict, fields, is_dataclass
@@ -18,26 +20,29 @@ from pathlib import Path
 from PySide6.QtCore import Property, QObject, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QDesktopServices
 
-from .. import AUTHOR_URL, COPYRIGHT, __version__, ipc
+from .. import AUTHOR_URL, COPYRIGHT, __version__
 from ..config import (
     AZURE_LOCALES,
     GAMEPAD_BUTTONS,
     MODELS,
     QUICK_TEXT_TRANSLATORS,
+    SOURCE_LANGUAGES,
     SPEECH_PROVIDERS,
     TARGET_LANGUAGES,
     TEAM_RECOGNIZERS,
     TEAM_TRANSLATORS,
     TRANSLATION_PROVIDERS,
     UI_LANGUAGES,
-    ConfigStore,
+    Correction,
+    QuickPhrase,
     Settings,
     default_config_dir,
     validate,
 )
-from ..credentials import protect, unprotect
+from ..credentials import protect
 from ..i18n import is_rtl, language, set_language, tr
-from ..runtime import app_command, autostart_enabled, set_autostart, spawn
+from ..options import DEVICE_LABELS, FEATURE_SWITCHES, MONITOR_LABELS, POSITION_LABELS
+from ..runtime import autostart_enabled, set_autostart
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +64,7 @@ HOTKEY_MODE_LABELS = {
     "toggle": "Press to start / stop",
     "voice": "Open mic (no key)",
 }
+QML_DIR = Path(__file__).resolve().parent / "qml"
 
 
 def _plain(obj):
@@ -108,33 +114,70 @@ def apply_value(s: Settings, path: str, value) -> None:
         raise KeyError(path)
     if field not in {f.name for f in fields(obj)}:
         raise KeyError(path)
-    setattr(obj, field, _coerce(getattr(obj, field), value))
+    current = getattr(obj, field)
+    if isinstance(current, list):
+        raise KeyError(path)  # lists have their own setters
+    setattr(obj, field, _coerce(current, value))
+
+
+def unique_name(s: Settings, wanted: str) -> str:
+    base = " ".join(wanted.split())[:40] or "Profile"
+    name, n = base, 2
+    while s.find_profile(name) is not None:
+        name, n = f"{base} ({n})", n + 1
+    return name
 
 
 class Hub(QObject):
     configChanged = Signal()
     statsChanged = Signal()
-    runningChanged = Signal()
     languageChanged = Signal()
     toast = Signal(str, str)  # message, kind: ok | warn | error
     testDone = Signal(str, "QVariantList")  # which ("azure" | "google"), [{ok, text}]
+    micTested = Signal(str)  # mic test outcome (the translation, or what went wrong)
+    keyCaptured = Signal(str, str)  # target, key name ("" = cancelled)
+    overlayMoved = Signal()
     _tested = Signal(str, list)  # from worker threads
 
-    def __init__(self, store: ConfigStore | None = None, poll: bool = True):
+    def __init__(self, controller, poll: bool = True):
         super().__init__()
-        self.store = store or ConfigStore()
-        self._settings = self.store.load()
-        self._config = config_view(self._settings)
+        self.c = controller
+        self._config = config_view(controller.settings)
         self._stats: dict = {}
-        self._running = False
-        self._starting = 0  # polls left to wait for a freshly started app
-        self._mtime = self._config_mtime()
+        self._capture_target = ""
+        self._moving = False
         self._tested.connect(self._emit_tested)
-        self._help = None
-        self._timer = QTimer(self, interval=1000, timeout=self.poll)
+        controller.test_result.connect(self.micTested)
+        controller.hotkey.captured.connect(self._on_captured)
+        self._moved_signal = getattr(controller.overlay, "moved", None)
+        if not hasattr(self._moved_signal, "connect"):  # e.g. the tray fallback overlay
+            self._moved_signal = None
+        if self._moved_signal is not None:
+            self._moved_signal.connect(self._on_overlay_moved)
+        self._timer = QTimer(self, interval=500, timeout=self.poll)
         if poll:
             self._timer.start()
-            QTimer.singleShot(0, self.poll)
+        self.poll()
+
+    def close(self) -> None:
+        """The window is closing: stop polling, end any capture/move, detach from the app."""
+        self._timer.stop()
+        if self._capture_target:
+            self.c.hotkey.cancel_capture()
+            self._capture_target = ""
+        if self._moving:
+            self.moveOverlay(False)
+        for signal, slot in (
+            (self.c.test_result, self.micTested),
+            (self.c.hotkey.captured, self._on_captured),
+            (self._moved_signal, self._on_overlay_moved),
+        ):
+            if signal is None:
+                continue
+            try:
+                signal.disconnect(slot)
+            except (RuntimeError, TypeError):
+                pass
 
     # ---- properties --------------------------------------------------------------------
 
@@ -145,14 +188,6 @@ class Hub(QObject):
     @Property("QVariantMap", notify=statsChanged)
     def stats(self) -> dict:
         return self._stats
-
-    @Property(bool, notify=runningChanged)
-    def running(self) -> bool:
-        return self._running
-
-    @Property(bool, notify=runningChanged)
-    def starting(self) -> bool:
-        return self._starting > 0
 
     @Property(bool, notify=languageChanged)
     def rtl(self) -> bool:
@@ -181,6 +216,14 @@ class Hub(QObject):
         except OSError:
             return False
 
+    @Property(bool, notify=statsChanged)
+    def micLevelActive(self) -> bool:
+        return bool(self.c.recording)
+
+    @Property(float, notify=statsChanged)
+    def micLevel(self) -> float:
+        return float(min(1.0, getattr(self.c.recorder, "level", 0.0) * 1.4))
+
     # ---- text --------------------------------------------------------------------------
 
     @Slot(str, result=str)
@@ -208,15 +251,16 @@ class Hub(QObject):
         """[{value, label, note}] for the interface's pickers (labels already translated)."""
         from ..google import MODELS as GOOGLE_MODELS
         from ..hotkey import SUPPORTED_HOTKEYS
-        from ..settings_dialog import DEVICE_LABELS, POSITION_LABELS
 
         tables = {
             "speech": SPEECH_PROVIDERS,
             "translation": TRANSLATION_PROVIDERS,
             "targets": TARGET_LANGUAGES,
+            "sources": SOURCE_LANGUAGES,
             "locales": AZURE_LOCALES,
             "devices": DEVICE_LABELS,
             "positions": POSITION_LABELS,
+            "monitors": MONITOR_LABELS,
             "teamRecognizers": TEAM_RECOGNIZERS,
             "teamTranslators": TEAM_TRANSLATORS,
             "quickText": QUICK_TEXT_TRANSLATORS,
@@ -229,49 +273,62 @@ class Hub(QObject):
         if name == "hotkeys":
             return [{"value": k, "label": k, "note": ""} for k in SUPPORTED_HOTKEYS]
         if name == "gamepad":
-            return [
-                {"value": b, "label": b or tr("None"), "note": ""} for b in GAMEPAD_BUTTONS if b
+            return [{"value": b, "label": b, "note": ""} for b in GAMEPAD_BUTTONS if b]
+        if name == "gamepadReplay":
+            return [{"value": "", "label": tr("None"), "note": ""}] + [
+                {"value": b, "label": b, "note": ""} for b in GAMEPAD_BUTTONS if b
             ]
+        if name == "microphones":
+            from ..audio import list_input_devices
+
+            return [{"value": "", "label": tr("Windows default"), "note": ""}] + [
+                {"value": n, "label": n, "note": ""} for n in list_input_devices()
+            ]
+        if name == "speakers":
+            from ..teammates import output_devices
+
+            return [{"value": "", "label": tr("Windows default output"), "note": ""}] + [
+                {"value": n, "label": n, "note": ""} for n in output_devices()
+            ]
+        if name == "fonts":
+            from PySide6.QtGui import QFontDatabase
+
+            fams = [f for f in QFontDatabase.families() if not f.startswith("@")]
+            return [{"value": f, "label": f, "note": ""} for f in fams]
         table = tables[name]
         return [{"value": k, "label": tr(v), "note": ""} for k, v in table.items()]
 
     @Slot(result="QVariantList")
     def featureList(self) -> list:
-        from ..settings_dialog import FEATURE_SWITCHES
-
         return [
             {"key": key, "label": tr(label), "topic": topic, "desc": tr(desc)}
             for key, label, topic, desc in FEATURE_SWITCHES
         ]
 
+    @Slot(result="QVariantList")
+    def suggestions(self) -> list:
+        return list(self.c.phrase_suggestions()[:6])
+
     # ---- settings ----------------------------------------------------------------------
 
-    def _config_mtime(self) -> float:
-        try:
-            return self.store.path.stat().st_mtime
-        except OSError:
-            return 0.0
-
     def _edit(self, change, message: str = "") -> bool:
-        """Load the newest config, change it, save, tell the running app. Never loses edits
-        made meanwhile by the app's own Settings window."""
-        s = self.store.load()
+        """Change a copy of the live settings, validate, then apply + save in one go."""
+        s = self.c.settings.clone()
         try:
             change(s)
         except (KeyError, ValueError, TypeError) as e:
             log.warning("Hub: bad setting change (%s)", type(e).__name__)
             return False
         validate(s)
-        self.store.save(s)
-        self._mtime = self._config_mtime()
-        self._settings = s
-        self._config = config_view(s)
-        self.configChanged.emit()
-        if self._running:
-            ipc.send_command("reload", 800)
+        self.c.apply_settings(s)
+        self._refresh_config()
         if message:
             self.toast.emit(message, "ok")
         return True
+
+    def _refresh_config(self) -> None:
+        self._config = config_view(self.c.settings)
+        self.configChanged.emit()
 
     @Slot(str, "QVariant")
     def set(self, path: str, value) -> None:
@@ -294,10 +351,6 @@ class Hub(QObject):
             self._edit(lambda s: setattr(getattr(s, section), key, ""), tr("Key removed"))
 
     @Slot(str)
-    def setProfile(self, name: str) -> None:
-        self._edit(lambda s: setattr(s, "active_profile", name))
-
-    @Slot(str)
     def setLanguage(self, code: str) -> None:
         self._edit(lambda s: setattr(s.features, "ui_language", code))
         set_language(code)
@@ -311,111 +364,206 @@ class Hub(QObject):
             self.toast.emit(tr("Couldn't change Windows startup."), "error")
         self.configChanged.emit()
 
+    # ---- lists (phrases, corrections, vocabulary, games) --------------------------------
+
+    @Slot("QVariantList")
+    def setPhrases(self, rows: list) -> None:
+        items = [QuickPhrase(str(r.get("key", "")), str(r.get("text", ""))) for r in rows]
+        self._edit(lambda s: setattr(s.profile, "quick_phrases", items))
+
+    @Slot(str, "QVariantList")
+    def setCorrections(self, which: str, rows: list) -> None:
+        field = "arabic_corrections" if which == "arabic" else "corrections"
+        items = [Correction(str(r.get("find", "")), str(r.get("replace", ""))) for r in rows]
+        self._edit(lambda s: setattr(s.profile, field, items))
+
+    @Slot(str, str)
+    def setLines(self, which: str, text: str) -> None:
+        """Vocabulary or game .exe names, one per line."""
+        lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+        field = {"vocabulary": "vocabulary", "games": "exe_names"}[which]
+        self._edit(lambda s: setattr(s.profile, field, lines))
+
+    # ---- profiles ----------------------------------------------------------------------
+
+    @Slot(str)
+    def setProfile(self, name: str) -> None:
+        self._edit(lambda s: setattr(s, "active_profile", name))
+
+    @Slot(str)
+    def newProfile(self, name: str) -> None:
+        def change(s):
+            p = copy.deepcopy(s.profile)
+            p.name, p.exe_names = unique_name(s, name or tr("New profile")), []
+            s.profiles.append(p)
+            s.active_profile = p.name
+
+        self._edit(change, tr("Profile created"))
+
+    @Slot(str)
+    def renameProfile(self, name: str) -> None:
+        def change(s):
+            new = " ".join(name.split())[:40]
+            if not new or new == s.profile.name:
+                raise ValueError("same name")
+            new = unique_name(s, new)
+            s.profile.name = new
+            s.active_profile = new
+
+        self._edit(change)
+
+    @Slot()
+    def deleteProfile(self) -> None:
+        if len(self.c.settings.profiles) <= 1:
+            self.toast.emit(tr("At least one profile is required."), "warn")
+            return
+
+        def change(s):
+            s.profiles.remove(s.profile)
+            s.active_profile = s.profiles[0].name
+
+        self._edit(change, tr("Profile deleted"))
+
+    @Slot()
+    def exportProfile(self) -> None:
+        from PySide6.QtWidgets import QFileDialog
+
+        p = self.c.settings.profile
+        path, _ = QFileDialog.getSaveFileName(
+            None, tr("Export profile"), f"{p.name}.gametalk.json", "GameTalk (*.json)"
+        )
+        if not path:
+            return
+        data = {"gametalk_profile": 1, "profile": asdict(p)}
+        try:
+            pathlib.Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2), "utf-8")
+            self.toast.emit(tr("Saved. Share this file with friends."), "ok")
+        except OSError:
+            self.toast.emit(tr("Couldn't save the file."), "error")
+
+    @Slot()
+    def importProfile(self) -> None:
+        from PySide6.QtWidgets import QFileDialog
+
+        path, _ = QFileDialog.getOpenFileName(None, tr("Import profile"), "", "GameTalk (*.json)")
+        if path:
+            self.importProfileFrom(path)
+
+    def importProfileFrom(self, path: str) -> bool:
+        from ..config import Profile, _from_dict
+
+        try:
+            data = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
+            if not isinstance(data, dict) or not isinstance(data.get("profile"), dict):
+                raise ValueError("not a GameTalk profile")
+            prof = _from_dict(Profile, data["profile"])
+        except (OSError, ValueError):
+            self.toast.emit(tr("This isn't a GameTalk profile file."), "error")
+            return False
+
+        def change(s):
+            prof.name = unique_name(s, prof.name or "Imported")  # never overwrite one
+            s.profiles.append(prof)
+            s.active_profile = prof.name
+
+        ok = self._edit(change)
+        if ok:
+            self.toast.emit(tr("Imported as “{name}”.", name=prof.name), "ok")
+        return ok
+
     # ---- live state --------------------------------------------------------------------
 
     @Slot()
     def poll(self) -> None:
-        if self._config_mtime() != self._mtime:  # e.g. saved from the app's Settings window
-            self._mtime = self._config_mtime()
-            self._settings = self.store.load()
-            self._config = config_view(self._settings)
-            self.configChanged.emit()
-        reply = ipc.send_command("stats", 400)
-        running = reply is not None
-        stats = {}
-        if reply and reply.startswith("{"):
-            try:
-                stats = json.loads(reply)
-            except ValueError:
-                stats = {}
-        if not running:
-            stats = {"usage": self._disk_usage()}  # quota gauges still work while it's off
-        was_starting = self._starting > 0
-        if running:
-            self._starting = 0
-        elif self._starting:
-            self._starting -= 1
-        if running != self._running or was_starting != (self._starting > 0):
-            self._running = running
-            self.runningChanged.emit()
-        if stats != self._stats:
+        stats = self.c.stats()
+        if stats != self._stats or self.c.recording:
             self._stats = stats
             self.statsChanged.emit()
 
-    def _disk_usage(self) -> dict:
-        from ..usage import UsageTracker
-
-        u = UsageTracker(self.store.path.parent / "usage.json").current
-        return {
-            "speech": round(u.speech_fraction, 4),
-            "translator": round(u.translator_fraction, 4),
-            "google": round(u.google_fraction, 4),
-        }
+    @Slot()
+    def resetUsage(self) -> None:
+        self.c.usage.reset()
+        self.poll()
+        self.toast.emit(tr("Counter reset"), "ok")
 
     # ---- actions -----------------------------------------------------------------------
 
     @Slot()
-    def toggleRunning(self) -> None:
-        if self._running:
-            ipc.send_command("quit")
-            self.toast.emit(tr("GameTalk stopped"), "warn")
+    def toggleEnabled(self) -> None:
+        on = not self.c.settings.enabled
+        self.c.set_enabled(on)
+        self._refresh_config()
+        self.poll()
+        if on:
+            self.toast.emit(tr("GameTalk is on"), "ok")
         else:
-            self.start()
-        QTimer.singleShot(700, self.poll)
+            self.toast.emit(tr("GameTalk is paused"), "warn")
 
     @Slot()
-    def start(self) -> None:
-        if self._running or self._starting:
-            return
-        try:
-            spawn(app_command())
-        except OSError:
-            self.toast.emit(tr("Couldn't start GameTalk."), "error")
-            return
-        self._starting = 25
-        self.runningChanged.emit()
-
-    def _command(self, command: str, flag: str) -> None:
-        if not self._running or ipc.send_command(command) is None:
-            try:
-                spawn(app_command(flag))
-            except OSError:
-                self.toast.emit(tr("Couldn't start GameTalk."), "error")
+    def quitApp(self) -> None:
+        self.c.quit()
 
     @Slot(str)
-    def openSettings(self, tab: str) -> None:
-        self._command(f"settings:{tab}" if tab else "settings", "--settings")
+    def testMic(self, device: str) -> None:
+        self.c.test_microphone(device or None)
 
     @Slot()
-    def testMic(self) -> None:
-        self._command("test", "--test-mic")
+    def refreshMics(self) -> None:
+        from ..audio import refresh_devices
+
+        refresh_devices()
+        self.configChanged.emit()  # pickers re-read their options
 
     @Slot()
     def selfTest(self) -> None:
-        self._command("selftest", "--selftest")
+        self.c.open_diagnostics()
 
     @Slot()
     def phrasebook(self) -> None:
-        self._command("phrasebook", "--phrasebook")
+        self.c.open_phrasebook()
 
     @Slot()
     def previewOverlay(self) -> None:
-        if not self._running:
-            self.toast.emit(tr("Start GameTalk to see the overlay on screen."), "warn")
+        self.c.preview_overlay()
+
+    @Slot(bool)
+    def moveOverlay(self, on: bool) -> None:
+        """Let the user drag the real overlay; its new offsets are saved when they're done."""
+        if on == self._moving or not hasattr(self.c.overlay, "set_move_mode"):
             return
-        ipc.send_command("preview")
+        self._moving = on
+        self.c.overlay.apply(self.c.settings.overlay, self.c.profile)
+        self.c.overlay.set_move_mode(on)
+
+    def _on_overlay_moved(self, x: int, y: int) -> None:
+        def change(s):
+            s.profile.overlay_offset_x, s.profile.overlay_offset_y = x, y
+
+        self._edit(change)
+        self.overlayMoved.emit()
+
+    @Slot(str)
+    def beginCapture(self, target: str) -> None:
+        """Next key/mouse button the user presses (seen by GameTalk's own hotkey system)."""
+        self._capture_target = target
+        self.c.hotkey.begin_capture()
+
+    @Slot()
+    def cancelCapture(self) -> None:
+        if self._capture_target:
+            self._capture_target = ""
+            self.c.hotkey.cancel_capture()
+
+    def _on_captured(self, name: str) -> None:
+        target, self._capture_target = self._capture_target, ""
+        if not target:
+            return
+        self.c.hotkey.cancel_capture()
+        self.keyCaptured.emit(target, name)
 
     @Slot(str)
     def openHelp(self, topic: str) -> None:
-        from ..help import HelpDialog
-
-        if self._help is None:
-            self._help = HelpDialog(topic or "start")
-        else:
-            self._help.show_topic(topic or "start")
-        self._help.show()
-        self._help.raise_()
-        self._help.activateWindow()
+        self.c.open_help(topic or "start")
 
     @Slot()
     def openLogs(self) -> None:
@@ -459,27 +607,14 @@ class Hub(QObject):
 
     @Slot()
     def testAzure(self) -> None:
-        from ..azure import AzureCredentials, check_connection
+        from ..azure import check_connection
 
-        a = self.store.load().azure
-        creds = AzureCredentials(
-            unprotect(a.speech_key),
-            a.speech_region,
-            unprotect(a.translator_key),
-            a.translator_region,
-        )
+        creds = self.c.azure_credentials()
         self._run_test("azure", lambda: check_connection(creds))
 
     @Slot()
     def testGoogle(self) -> None:
-        from ..google import GoogleCredentials, check_connection
+        from ..google import check_connection
 
-        g = self.store.load().google
-        creds = GoogleCredentials(unprotect(g.api_key), g.project_id, g.model, g.location)
+        creds = self.c.google_credentials()
         self._run_test("google", lambda: check_connection(creds))
-
-    def close(self) -> None:
-        self._timer.stop()
-
-
-QML_DIR = Path(__file__).resolve().parent / "qml"

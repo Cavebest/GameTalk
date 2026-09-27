@@ -36,7 +36,7 @@ ScrollPage {
             spacing: 12
             Icon { path: Icons.key; size: 20; color: Theme.warn }
             Text { text: page.missing; color: Theme.text; font.pixelSize: 13; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-            Btn { text: hub.t("Add key"); kind: "primary"; small: true; onClicked: page.navigate(6) }
+            Btn { text: hub.t("Add key"); kind: "primary"; small: true; onClicked: page.navigate(9) }
         }
     }
 
@@ -94,6 +94,30 @@ ScrollPage {
                 current: page.cfg.compute_device
                 onPicked: function(v) { hub.set("compute_device", v) }
             }
+        }
+        SettingRow {
+            visible: !page.azureSpeech
+            icon: Icons.language
+            title: hub.t("Spoken language")
+            desc: hub.t("The language you speak. Auto-detect is slower and can guess wrong on short sentences.")
+            RowLayout {
+                spacing: 10
+                Dropdown {
+                    width: 170
+                    enabled: !page.prof.auto_detect_language
+                    items: hub.options("sources")
+                    current: page.prof.source_language
+                    onPicked: function(v) { hub.set("profile.source_language", v) }
+                }
+                Text { text: hub.t("Auto"); color: Theme.muted; font.pixelSize: 12 }
+                Toggle { checked: page.prof.auto_detect_language; onToggled: function(on) { hub.set("profile.auto_detect_language", on) } }
+            }
+        }
+        SettingRow {
+            icon: Icons.type
+            title: hub.t("Also show the original transcript")
+            desc: hub.t("Shows what you said (in Arabic) under the translation. A little slower with Whisper.")
+            Toggle { checked: page.cfg.show_arabic; onToggled: function(on) { hub.set("show_arabic", on) } }
         }
         SettingRow {
             visible: page.azureSpeech

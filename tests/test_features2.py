@@ -3,7 +3,7 @@ import json
 import numpy as np
 import pytest
 
-from gametalk.config import Correction, Settings, settings_from_dict, validate
+from gametalk.config import Settings, settings_from_dict, validate
 from gametalk.translate import TranslationRequest, run_pipeline, run_text_pipeline
 
 # ---------------------------------------------------------------- usage counter
@@ -288,62 +288,6 @@ def test_worker_speech_gate_drops_non_speech(qapp, monkeypatch):
     w.finished.connect(lambda tag, r: out.append((tag, r.text)))
     w.process(sp_mod.Job(SPEECH, TranslationRequest("ar"), "voice", speech_gate=True))
     assert out == [("voice", "")] and called == []
-
-
-# ---------------------------------------------------------------- profile export / import
-
-
-def test_profile_export_import_round_trip(qapp, tmp_path, monkeypatch):
-    from test_settings_dialog import make_controller
-
-    from gametalk import settings_dialog
-    from gametalk.config import QuickPhrase
-    from gametalk.settings_dialog import SettingsDialog
-
-    c = make_controller(tmp_path)
-    dlg = SettingsDialog(c)
-    dlg.cur.quick_phrases = [QuickPhrase("Numpad9", "Rotate B!")]
-    dlg.cur.corrections = [Correction("Zafira", "ammo")]
-    dlg._load_profile(dlg.cur)
-    out = tmp_path / "cs2.gametalk.json"
-    monkeypatch.setattr(
-        settings_dialog.QFileDialog, "getSaveFileName", staticmethod(lambda *a, **k: (str(out), ""))
-    )
-    monkeypatch.setattr(
-        settings_dialog.QFileDialog, "getOpenFileName", staticmethod(lambda *a, **k: (str(out), ""))
-    )
-    monkeypatch.setattr(settings_dialog.QMessageBox, "information", staticmethod(lambda *a: None))
-    dlg._export_profile()
-    data = json.loads(out.read_text(encoding="utf-8"))
-    assert data["profile"]["quick_phrases"] == [{"key": "Numpad9", "text": "Rotate B!"}]
-    assert "azure" not in data["profile"] and "speech_key" not in json.dumps(data)  # no keys
-    dlg._import_profile()
-    names = [p.name for p in dlg.s.profiles]
-    assert names == ["Default", "Default (2)"]  # never overwrites
-    imported = dlg.s.find_profile("Default (2)")
-    assert imported.corrections == [Correction("Zafira", "ammo")]
-    dlg.reject()
-
-
-def test_import_rejects_garbage(qapp, tmp_path, monkeypatch):
-    from test_settings_dialog import make_controller
-
-    from gametalk import settings_dialog
-    from gametalk.settings_dialog import SettingsDialog
-
-    bad = tmp_path / "bad.json"
-    bad.write_text('{"hello": 1}', encoding="utf-8")
-    warnings = []
-    monkeypatch.setattr(
-        settings_dialog.QFileDialog, "getOpenFileName", staticmethod(lambda *a, **k: (str(bad), ""))
-    )
-    monkeypatch.setattr(
-        settings_dialog.QMessageBox, "warning", staticmethod(lambda *a: warnings.append(a))
-    )
-    dlg = SettingsDialog(make_controller(tmp_path))
-    dlg._import_profile()
-    assert warnings and len(dlg.s.profiles) == 1
-    dlg.reject()
 
 
 # ---------------------------------------------------------------- self-test

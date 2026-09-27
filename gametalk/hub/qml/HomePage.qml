@@ -10,12 +10,11 @@ ScrollPage {
     readonly property var cfg: hub.config
     readonly property var st: hub.stats
     readonly property var prof: cfg.profile
-    readonly property string phase: !hub.running ? (hub.starting ? "starting" : "off")
-        : st.state === "disabled" ? "disabled"
+    readonly property string phase: st.state === "disabled" ? "disabled"
         : st.loading ? "loading"
         : st.error ? "error"
         : (st.phase || "idle")
-    readonly property color phaseColor: phase === "off" || phase === "disabled" ? Theme.faint
+    readonly property color phaseColor: phase === "disabled" ? Theme.faint
         : phase === "recording" ? Theme.danger
         : phase === "error" ? Theme.danger
         : phase === "idle" ? Theme.ok
@@ -27,11 +26,9 @@ ScrollPage {
 
     function statusTitle() {
         switch (phase) {
-        case "off": return hub.t("GameTalk is off")
-        case "starting": return hub.t("Starting…")
         case "loading": return hub.t("Loading the speech model…")
         case "error": return hub.t("Speech engine problem")
-        case "disabled": return hub.t("Paused from the tray")
+        case "disabled": return hub.t("GameTalk is paused")
         case "recording": return hub.t("Listening…")
         case "processing": return hub.t("Translating…")
         }
@@ -41,11 +38,9 @@ ScrollPage {
     }
     function statusSub() {
         switch (phase) {
-        case "off": return hub.t("Press start — it then waits quietly in the tray, using no CPU.")
-        case "starting": return hub.t("Opening the engine. First start can take a few seconds.")
         case "loading": return hub.t("First time only: the model downloads once, then works offline.")
         case "error": return hub.t(st.error)
-        case "disabled": return hub.t("Turn it back on from the tray icon or here.")
+        case "disabled": return hub.t("Your key does nothing until you turn it back on. Press the button.")
         }
         return hub.tf("Profile: {name}", {name: st.profile || prof.name}) + "  ·  " + (st.engine || speechName)
     }
@@ -68,10 +63,10 @@ ScrollPage {
             spacing: 22
 
             PowerButton {
-                running: hub.running
-                busy: hub.starting || page.phase === "loading"
+                running: page.cfg.enabled
+                busy: page.phase === "loading"
                 live: page.phase === "recording"
-                onClicked: hub.toggleRunning()
+                onClicked: hub.toggleEnabled()
             }
 
             ColumnLayout {
@@ -154,8 +149,7 @@ ScrollPage {
         TypeText {
             Layout.fillWidth: true
             full: page.st.last ? page.st.last.text : ""
-            placeholder: hub.running ? hub.tf("Hold {key}, say something in Arabic, and it appears here.", {key: page.hotkey})
-                                     : hub.t("Start GameTalk and your translations appear here.")
+            placeholder: hub.tf("Hold {key}, say something in Arabic, and it appears here.", {key: page.hotkey})
         }
         Text {
             visible: !!(page.st.last && page.st.last.extra)
@@ -211,7 +205,7 @@ ScrollPage {
                 Icon { path: Icons.chart; size: 16; color: Theme.accent }
                 Caption { text: hub.t("Translations today") }
             }
-            CountUp { value: page.st.today || 0; empty: !hub.running; font.pixelSize: 30 }
+            CountUp { value: page.st.today || 0; font.pixelSize: 30 }
             Text {
                 text: hub.t("Counted while GameTalk runs. Nothing you say is stored.")
                 color: Theme.faint
@@ -317,7 +311,7 @@ ScrollPage {
             Flow {
                 Layout.fillWidth: true
                 spacing: 10
-                Btn { text: hub.t("Test microphone"); icon: Icons.mic; onClicked: hub.testMic() }
+                Btn { text: hub.t("Test microphone"); icon: Icons.mic; onClicked: page.navigate(2) }
                 Btn { text: hub.t("Self-test"); icon: Icons.pulse; onClicked: hub.selfTest() }
                 Btn { text: hub.t("Show overlay"); icon: Icons.eye; onClicked: hub.previewOverlay() }
                 Btn { text: hub.t("My phrasebook"); icon: Icons.book; onClicked: hub.phrasebook() }

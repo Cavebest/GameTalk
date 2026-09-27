@@ -191,7 +191,7 @@ def test_usage_counts_google_separately(tmp_path):
 
 
 def test_quick_text_auto_prefers_the_profiles_google(qapp, tmp_path):
-    from test_settings_dialog import make_controller
+    from factory import make_controller
 
     from gametalk.credentials import protect
 
@@ -207,7 +207,7 @@ def test_quick_text_auto_prefers_the_profiles_google(qapp, tmp_path):
 
 
 def test_send_audio_attaches_google_credentials(qapp, tmp_path):
-    from test_settings_dialog import make_controller
+    from factory import make_controller
 
     from gametalk.credentials import protect
 

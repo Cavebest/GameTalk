@@ -188,7 +188,7 @@ def _whisper_translate(
     )
 
 
-GOOGLE_KEY_MISSING = "Add your Google Translate API key in Settings > Cloud keys."
+GOOGLE_KEY_MISSING = "Add your Google Translate API key on the Cloud keys page."
 
 
 def _usage(translator: str, source: str, text: str, google) -> dict:
@@ -212,7 +212,7 @@ def run_pipeline(
 ) -> TranslationResult:
     uses_azure = "azure" in (req.speech_provider, req.translation_provider)
     if uses_azure and cloud is None:
-        raise PipelineError("Add your Azure keys in Settings > Azure.")
+        raise PipelineError("Add your Azure keys on the Cloud keys page.")
     if req.translation_provider == "google" and google is None:
         raise PipelineError(GOOGLE_KEY_MISSING)
     if req.speech_provider != "azure" and whisper is None:
@@ -279,7 +279,7 @@ def run_text_pipeline(
     usage = {}
     if translator == "azure":
         if cloud is None:
-            raise PipelineError("Add your Azure Translator key in Settings > Azure.")
+            raise PipelineError("Add your Azure Translator key on the Cloud keys page.")
         english = cloud.translate(fixed, None, req.target_language or "en")
         usage = _usage("azure", fixed, english, google)
     elif translator == "google":
@@ -312,7 +312,7 @@ def run_team_pipeline(
     """Teammate subtitles: English speech -> (optionally) translated text."""
     if req.recognizer == "azure":
         if cloud is None:
-            raise PipelineError("Add your Azure Speech key in Settings > Azure.")
+            raise PipelineError("Add your Azure Speech key on the Cloud keys page.")
         if speech_check is not None and not speech_check(audio):
             return TranslationResult(text="")  # gunfire/music: never sent to Azure
         clip = trim_silence(audio)
@@ -329,7 +329,7 @@ def run_team_pipeline(
     usage = {}
     if req.translator == "azure":
         if cloud is None:
-            raise PipelineError("Add your Azure Translator key in Settings > Azure.")
+            raise PipelineError("Add your Azure Translator key on the Cloud keys page.")
         text = cloud.translate(english, "en", req.target_language)
         usage = _usage("azure", english, text, google)
     elif req.translator == "google":

@@ -45,14 +45,15 @@ def setup_logging(verbose: bool) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="gametalk", description=APP_NAME)
-    parser.add_argument("--settings", action="store_true", help="open settings on start")
-    parser.add_argument("--azure", action="store_true", help="open settings on the Azure tab")
+    parser.add_argument("--show", action="store_true", help="open the main window")
+    parser.add_argument("--settings", action="store_true", help="open the settings page")
+    parser.add_argument("--azure", action="store_true", help="open the cloud keys page")
     parser.add_argument("--test-mic", action="store_true", help="run a microphone test")
     parser.add_argument("--selftest", action="store_true", help="open the self-test")
     parser.add_argument("--phrasebook", action="store_true", help="open my phrasebook")
     parser.add_argument("--verbose", action="store_true", help="debug logging")
     parser.add_argument("--app", action="store_true", help=argparse.SUPPRESS)  # installed exe
-    args = parser.parse_args(argv)
+    args, _unknown = parser.parse_known_args(argv)  # old shortcuts may pass retired flags
     if args.azure:
         command = "settings:azure"
     elif args.settings:
@@ -63,6 +64,8 @@ def main(argv: list[str] | None = None) -> int:
         command = "selftest"
     elif args.phrasebook:
         command = "phrasebook"
+    elif args.show:
+        command = "show"
     else:
         command = ""
 
@@ -91,13 +94,23 @@ def main(argv: list[str] | None = None) -> int:
 
     app = QApplication(sys.argv[:1])
     app.setApplicationName(APP_NAME)
-    app.setQuitOnLastWindowClosed(False)
+    app.setQuitOnLastWindowClosed(False)  # closing the window hides GameTalk to the tray
+    try:
+        from PySide6.QtQuickControls2 import QQuickStyle
+
+        QQuickStyle.setStyle("Basic")  # the main window styles every control itself
+    except ImportError:
+        pass
 
     config_dir = default_config_dir()
     config_dir.mkdir(parents=True, exist_ok=True)
     lock = QLockFile(str(config_dir / "gametalk.lock"))
     if not lock.tryLock(100):
         # Already running: hand the request to that instance instead of starting a second one.
+        if sys.platform == "win32":
+            import ctypes
+
+            ctypes.windll.user32.AllowSetForegroundWindow(-1)  # let it bring its window up
         if ipc.send_command(command or "hello") is None:
             QMessageBox.information(None, APP_NAME, f"{APP_NAME} is already running (tray).")
         return 0
@@ -139,14 +152,15 @@ def main(argv: list[str] | None = None) -> int:
     server.listen()
     if first_run:
         store.save(settings)
+        command = command or "show"  # first start: show what GameTalk is
         if tray is not None:
             tray.notify(
                 tr("Running in the tray. Hold {key}, speak, release.", key=settings.profile.hotkey)
             )
     if tray is None:
-        # Without a tray the settings window is the only UI, so closing it exits.
+        # Without a tray the main window is the only UI, so closing it exits.
         app.setQuitOnLastWindowClosed(True)
-        command = command if command.startswith("settings") else "settings"
+        command = command if command.startswith(("settings", "show")) else "show"
     if command:
         controller.handle_command(command)
 

@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from gametalk import config, google, help, i18n, launcher, settings_dialog
+from gametalk import config, google, help, i18n, options
 from gametalk.hub import backend
 from gametalk.i18n_ar import AR
 
@@ -48,14 +48,13 @@ def _labels() -> set[str]:
         google.MODELS,
         backend.MODEL_NOTES,
         backend.HOTKEY_MODE_LABELS,
-        settings_dialog.DEVICE_LABELS,
-        settings_dialog.MONITOR_LABELS,
-        settings_dialog.POSITION_LABELS,
+        options.DEVICE_LABELS,
+        options.MONITOR_LABELS,
+        options.POSITION_LABELS,
     ):
         out.update(d.values())
-    out.update(label for _, label, _, _ in settings_dialog.FEATURE_SWITCHES)
-    out.update(desc for _, _, _, desc in settings_dialog.FEATURE_SWITCHES)
-    out.update(label for _, label in launcher.FEATURE_NAMES)
+    out.update(label for _, label, _, _ in options.FEATURE_SWITCHES)
+    out.update(desc for _, _, _, desc in options.FEATURE_SWITCHES)
     out.discard("العربية")  # already Arabic
     return out
 
@@ -108,6 +107,11 @@ def test_help_has_both_languages_for_every_topic():
     for key, (t_en, t_ar, s_en, s_ar, b_en, b_ar) in help.TOPICS.items():
         assert all((t_en, t_ar, s_en, s_ar, b_en, b_ar)), key
         assert any("؀" <= ch <= "ۿ" for ch in t_ar + s_ar + b_ar), key
-    # every settings page links to an existing help topic
-    for _page, _icon, topic in settings_dialog.PAGES:
-        assert topic in help.TOPICS
+    # every "?" in the main window opens an existing help topic
+    topics = set()
+    for f in (PKG / "hub" / "qml").glob("*.qml"):
+        text = f.read_text(encoding="utf-8")
+        topics.update(re.findall(r'(?:helpTopic|topic): "(\w+)"', text))
+        topics.update(re.findall(r'openHelp\("(\w+)"\)', text))
+    topics.update(t for _, _, t, _ in options.FEATURE_SWITCHES)
+    assert topics and not topics - set(help.TOPICS), topics - set(help.TOPICS)

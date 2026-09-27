@@ -140,7 +140,7 @@ class Controller(QObject):
         self._today = ("", 0)  # (date, translations that day)
         self._tag = "ptt"  # tag of the recording in progress
         self._ptt_source = "key"  # "key" | "pad": which device started the recording
-        self._settings_dialog = None
+        self._window = None  # the main window (created when opened, freed when closed)
         self._help_dialog = None
         self._creds_cache: tuple[tuple, AzureCredentials] | None = None
         self._google_cache: tuple[tuple, GoogleCredentials] | None = None
@@ -175,7 +175,7 @@ class Controller(QObject):
         speech.failed.connect(self._on_failed)
         if tray is not None:
             tray.enabled_toggled.connect(self.set_enabled)
-            tray.settings_requested.connect(lambda: self.open_settings())
+            tray.settings_requested.connect(lambda: self.open_window())
             tray.help_requested.connect(lambda: self.open_help())
             tray.test_requested.connect(lambda: self.test_microphone())
             tray.reload_requested.connect(self.reload_model)
@@ -245,7 +245,7 @@ class Controller(QObject):
     def _google_problem(self) -> str:
         creds = self.google_credentials()
         if not creds.has_key:
-            return tr("Add your Google Translate API key in Settings > Cloud keys.")
+            return tr("Add your Google Translate API key on the Cloud keys page.")
         if not creds.ready:
             return tr("Google Translation LLM needs your Google Cloud project ID.")
         return ""
@@ -259,9 +259,9 @@ class Controller(QObject):
             return ""
         creds = self.azure_credentials()
         if p.speech_provider == AZURE and not creds.has_speech:
-            return tr("Add your Azure Speech key and region in Settings > Azure.")
+            return tr("Add your Azure Speech key and region on the Cloud keys page.")
         if p.translation_provider == AZURE and not creds.has_translator:
-            return tr("Add your Azure Translator key in Settings > Azure.")
+            return tr("Add your Azure Translator key on the Cloud keys page.")
         return ""
 
     def _watch_foreground(self) -> bool:
@@ -310,6 +310,8 @@ class Controller(QObject):
             self.voice.stop()
         self.usage.save()
         self.phrasebook.save()
+        if self._window is not None:
+            self._window.close()
         clean = self.speech.shutdown()
         if self.tray is not None:
             self.tray.hide()
@@ -458,7 +460,7 @@ class Controller(QObject):
             return
         if is_digital_silence(audio):
             self._report_error(
-                tr("No sound from the mic — is it muted? Pick another in Settings."), tag
+                tr("No sound from the mic — is it muted? Pick another on the Microphone page."), tag
             )
             return
         self._send_audio(audio, tag)
@@ -600,7 +602,8 @@ class Controller(QObject):
             self._suggested.add(normalize(result.text))
             self._notify(
                 tr(
-                    "You often say “{text}”. Add it as a quick phrase in Settings → Quick phrases.",
+                    "You often say “{text}”. "
+                    "Add it as a quick phrase on the Phrases and words page.",
                     text=result.text,
                 )
             )
@@ -670,7 +673,7 @@ class Controller(QObject):
         creds = self.azure_credentials() if translator == AZURE else None
         problem = ""
         if translator == AZURE and not creds.has_translator:
-            problem = tr("Add your Azure Translator key in Settings > Azure.")
+            problem = tr("Add your Azure Translator key on the Cloud keys page.")
         elif translator == GOOGLE:
             problem = self._google_problem()
         if problem:
@@ -936,7 +939,7 @@ class Controller(QObject):
         self.overlay.show_info(tr("Reloading speech model…"))
 
     def reload_config(self) -> None:
-        """Pick up changes another process (the launcher) wrote to config.json."""
+        """Pick up changes another process wrote to config.json."""
         self.apply_settings(self.store.load())
 
     def status_text(self) -> str:
@@ -999,7 +1002,9 @@ class Controller(QObject):
         if command == "preview":
             QTimer.singleShot(0, self.preview_overlay)
             return "ok"
-        if command.startswith("settings"):
+        if command == "show":
+            QTimer.singleShot(0, self.open_window)
+        elif command.startswith("settings"):
             _, _, tab = command.partition(":")
             QTimer.singleShot(0, lambda: self.open_settings(tab or None))
         elif command.startswith("help"):
@@ -1025,24 +1030,17 @@ class Controller(QObject):
             return "unknown"
         return "ok"
 
-    def open_settings(self, tab: str | None = None) -> None:
-        from .settings_dialog import SettingsDialog
+    def open_window(self, page: str | int | None = None) -> None:
+        """Show the main window (on a page, e.g. "overlay"), creating it if needed."""
+        from .hub import HubWindow
 
-        if self._settings_dialog is not None:
-            if tab:
-                self._settings_dialog.show_tab(tab)
-            self._settings_dialog.showNormal()
-            self._settings_dialog.raise_()
-            self._settings_dialog.activateWindow()
-            return
-        dlg = SettingsDialog(self)
-        if tab:
-            dlg.show_tab(tab)
-        self._settings_dialog = dlg
-        dlg.finished.connect(self._on_settings_closed)
-        dlg.show()
-        dlg.raise_()
-        dlg.activateWindow()
+        if self._window is None:
+            self._window = HubWindow(self)
+        if not self._window.show(page):
+            self._notify(tr("The main window couldn't open. See the log file."), error=True)
+
+    def open_settings(self, tab: str | None = None) -> None:
+        self.open_window(tab or "settings")
 
     def open_help(self, topic: str | None = None) -> None:
         from .help import HelpDialog
@@ -1055,12 +1053,6 @@ class Controller(QObject):
         self._help_dialog.show()
         self._help_dialog.raise_()
         self._help_dialog.activateWindow()
-
-    def _on_settings_closed(self, _result: int) -> None:
-        dlg, self._settings_dialog = self._settings_dialog, None
-        self.overlay.apply(self.settings.overlay, self.profile)  # drop unsaved previews
-        if dlg is not None:
-            dlg.deleteLater()
 
     # ---- status ---------------------------------------------------------------------------
 

@@ -118,7 +118,7 @@ def run_checks(s: dict, open_mic=None) -> list[Check]:
                 "fail",
                 tr("Speech engine"),
                 tr(s["last_error"] or "Speech model isn't loaded."),
-                tr("Settings → Speech: pick another model, or connect to the internet once."),
+                tr("Engines page: pick another model, or connect to the internet once."),
             )
         )
 
@@ -131,7 +131,7 @@ def run_checks(s: dict, open_mic=None) -> list[Check]:
                 "warn",
                 tr("Graphics card"),
                 tr("An NVIDIA GPU was found but Whisper runs on the CPU."),
-                tr("Settings → Speech → Run on: Auto. Update the NVIDIA driver if it persists."),
+                tr("Engines page → Run on: Auto. Update the NVIDIA driver if it persists."),
             )
         )
     elif gpus:
@@ -159,7 +159,7 @@ def run_checks(s: dict, open_mic=None) -> list[Check]:
                         tr("Microphone"),
                         tr("The microphone gives no sound at all."),
                         tr(
-                            "Unmute it, pick your real microphone in Settings → Microphone, or "
+                            "Unmute it, pick your real microphone on the Microphone page, or "
                             "allow it in Windows Privacy → Microphone."
                         ),
                     )
@@ -181,7 +181,7 @@ def run_checks(s: dict, open_mic=None) -> list[Check]:
                     "fail",
                     tr("Microphone"),
                     tr(str(e)),
-                    tr("Pick another microphone in Settings → Microphone."),
+                    tr("Pick another microphone on the Microphone page."),
                 )
             )
 
@@ -243,7 +243,7 @@ def run_checks(s: dict, open_mic=None) -> list[Check]:
                     "ok" if ok else "fail",
                     "Azure",
                     tr(head) + sep + rest,
-                    "" if ok else tr("Settings → Azure: check the key and region."),
+                    "" if ok else tr("Cloud keys page: check the key and region."),
                 )
             )
     else:
@@ -260,7 +260,7 @@ def run_checks(s: dict, open_mic=None) -> list[Check]:
                     "ok" if ok else "fail",
                     "Google Translate",
                     tr(head) + sep + rest,
-                    "" if ok else tr("Settings → Cloud keys: check the Google API key."),
+                    "" if ok else tr("Cloud keys page: check the Google API key."),
                 )
             )
 
@@ -304,7 +304,7 @@ def run_checks(s: dict, open_mic=None) -> list[Check]:
                     "fail",
                     tr("Teammate subtitles"),
                     tr("The selected output device isn't connected."),
-                    tr("Settings → Teammate subtitles → Listen to."),
+                    tr("Teammates page → Listen to."),
                 )
             )
         else:

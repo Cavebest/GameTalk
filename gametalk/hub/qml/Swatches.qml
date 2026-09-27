@@ -25,6 +25,8 @@ Flow {
                 anchors.centerIn: parent
                 width: 18; height: 18; radius: 9
                 color: dot.modelData
+                border.width: 1  // keeps the near-black choices visible on the dark card
+                border.color: Theme.borderHover
                 scale: dm.pressed ? 0.85 : 1
                 Behavior on scale { NumberAnimation { duration: 120 } }
                 Icon {

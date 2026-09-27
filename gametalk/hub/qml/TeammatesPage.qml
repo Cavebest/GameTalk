@@ -73,6 +73,21 @@ ScrollPage {
         }
     }
 
+    Card {
+        Layout.fillWidth: true
+        SettingRow {
+            icon: Icons.speaker
+            title: hub.t("Listen to")
+            desc: hub.t("The speakers or headset your game and Discord play through.")
+            Dropdown {
+                width: 300
+                items: hub.options("speakers")
+                current: page.tm.device
+                onPicked: function(v) { hub.set("teammates.device", v) }
+            }
+        }
+    }
+
     Caption { text: hub.t("Who understands them") }
     RowLayout {
         Layout.fillWidth: true
@@ -149,6 +164,7 @@ ScrollPage {
             }
             ColumnLayout {
                 Layout.fillWidth: true
+                LabeledSlider { title: hub.t("Distance from the edge"); from: 0; to: 800; stepSize: 4; bound: page.tm.offset_y; unit: " px"; onCommitted: function(v) { hub.set("teammates.offset_y", v) } }
                 LabeledSlider { title: hub.t("Text size"); from: 10; to: 40; bound: page.tm.font_size; unit: " pt"; onCommitted: function(v) { hub.set("teammates.font_size", v) } }
                 LabeledSlider { title: hub.t("Stays on screen"); from: 1; to: 15; bound: page.tm.display_seconds; unit: " " + hub.t("s"); onCommitted: function(v) { hub.set("teammates.display_seconds", v) } }
             }

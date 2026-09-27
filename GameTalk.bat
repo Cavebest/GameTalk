@@ -1,6 +1,6 @@
 @echo off
 rem Copyright (c) 2026 Shkour Bashtawi - https://github.com/ShkourBashtawi
-rem GameTalk Translator - double-click to open the launcher.
+rem GameTalk Translator - double-click to open GameTalk.
 rem First run: creates .venv and installs everything (a few minutes, needs internet once).
 setlocal
 cd /d "%~dp0"

@@ -5,7 +5,7 @@ import "icons.js" as Icons
 ScrollPage {
     id: page
     title: hub.t("Settings")
-    subtitle: hub.t("Language, profiles, startup and the detailed settings pages.")
+    subtitle: hub.t("Language, startup, sounds, learning mode and tools.")
     helpTopic: "general"
 
     readonly property var cfg: hub.config
@@ -40,6 +40,7 @@ ScrollPage {
             SettingRow {
                 icon: Icons.bubble
                 title: hub.t("Tray notifications")
+                desc: hub.t("Small pop-up messages for warnings and tips.")
                 Toggle { checked: page.f.tray_notifications; onToggled: function(on) { hub.set("features.tray_notifications", on) } }
             }
             SettingRow {
@@ -72,25 +73,15 @@ ScrollPage {
 
             Card {
                 Layout.fillWidth: true
-                Caption { text: hub.t("Profiles") }
+                Caption { text: hub.t("Learning mode") }
                 SettingRow {
-                    icon: Icons.target
-                    title: hub.t("Active profile")
-                    desc: hub.t("Each game can have its own key, engines and overlay.")
-                    Dropdown {
-                        width: 200
-                        items: page.cfg.profiles.map(function(n) { return {value: n, label: n} })
-                        current: page.cfg.active_profile
-                        onPicked: function(v) { hub.setProfile(v) }
-                    }
+                    icon: Icons.book
+                    title: hub.t("Save my phrasebook")
+                    desc: hub.t("The only feature that stores what you said — on this PC only — so you can practise it.")
+                    helpTopic: "learning"
+                    Toggle { checked: page.f.learning_enabled; onToggled: function(on) { hub.set("features.learning_enabled", on) } }
                 }
-                SettingRow {
-                    icon: Icons.refresh
-                    title: hub.t("Switch automatically")
-                    desc: hub.t("Picks the right profile when its game gets focus.")
-                    Toggle { checked: page.cfg.auto_switch_profiles; onToggled: function(on) { hub.set("auto_switch_profiles", on) } }
-                }
-                Btn { text: hub.t("Manage profiles and games"); icon: Icons.sliders; small: true; onClicked: hub.openSettings("games") }
+                Btn { text: hub.t("My phrasebook"); icon: Icons.book; small: true; onClicked: hub.phrasebook() }
             }
 
             Card {
@@ -100,69 +91,23 @@ ScrollPage {
                     Layout.fillWidth: true
                     spacing: 10
                     Btn { text: hub.t("Self-test"); icon: Icons.pulse; small: true; onClicked: hub.selfTest() }
-                    Btn { text: hub.t("My phrasebook"); icon: Icons.book; small: true; onClicked: hub.phrasebook() }
                     Btn { text: hub.t("Logs folder"); icon: Icons.folder; small: true; onClicked: hub.openLogs() }
                     Btn { text: hub.t("Desktop shortcut"); icon: Icons.link; small: true; onClicked: hub.createShortcut() }
+                    Btn { text: hub.t("Help"); icon: Icons.help; small: true; onClicked: hub.openHelp("start") }
                 }
             }
-        }
-    }
 
-    Caption { text: hub.t("Detailed settings"); Layout.topMargin: 4 }
-    GridLayout {
-        Layout.fillWidth: true
-        columns: page.width > 1000 ? 4 : 2
-        columnSpacing: 12
-        rowSpacing: 12
-        Repeater {
-            model: [
-                {tab: "microphone", icon: Icons.mic},
-                {tab: "speech", icon: Icons.engine},
-                {tab: "phrases", icon: Icons.bubble},
-                {tab: "corrections", icon: Icons.type},
-                {tab: "quicktext", icon: Icons.keyboard},
-                {tab: "learning", icon: Icons.book},
-                {tab: "overlay", icon: Icons.overlay},
-                {tab: "games", icon: Icons.target}
-            ]
-            delegate: Rectangle {
-                id: tile
-                required property var modelData
-                readonly property string topic: modelData.tab === "games" ? "profiles" : modelData.tab
+            Card {
                 Layout.fillWidth: true
-                implicitHeight: 92
-                radius: 12
-                color: tm.containsMouse ? Theme.surface2 : Theme.surface
-                border.width: 1
-                border.color: tm.containsMouse ? Theme.accent : Theme.border
-                scale: tm.pressed ? 0.97 : 1
-                Behavior on color { ColorAnimation { duration: 160 } }
-                Behavior on border.color { ColorAnimation { duration: 160 } }
-                Behavior on scale { NumberAnimation { duration: 120 } }
-                ColumnLayout {
-                    anchors { fill: parent; margins: 14 }
-                    spacing: 4
-                    RowLayout {
-                        Icon { path: tile.modelData.icon; size: 18; color: tm.containsMouse ? Theme.accent : Theme.textSoft }
-                        Item { Layout.fillWidth: true }
-                        Icon {
-                            path: Icons.external
-                            size: 14
-                            color: Theme.faint
-                            opacity: tm.containsMouse ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: 160 } }
-                        }
-                    }
-                    Text { text: hub.helpTitle(tile.topic); color: Theme.text; font.pixelSize: 13; font.weight: Font.DemiBold; elide: Text.ElideRight; Layout.fillWidth: true }
-                    Text { text: hub.helpSummary(tile.topic); color: Theme.muted; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+                Caption { text: hub.t("Close or quit") }
+                Text {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    color: Theme.muted
+                    font.pixelSize: 12
+                    text: hub.t("Closing this window keeps GameTalk running in the tray (hidden icons), so your key keeps working. Quit stops it completely.")
                 }
-                MouseArea {
-                    id: tm
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: hub.openSettings(tile.modelData.tab)
-                }
+                Btn { text: hub.t("Quit GameTalk"); icon: Icons.exit; kind: "danger"; small: true; onClicked: hub.quitApp() }
             }
         }
     }

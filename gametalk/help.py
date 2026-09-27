@@ -26,18 +26,18 @@ TOPICS: dict[str, tuple[str, str, str, str, str, str]] = {
         "البداية",
         "Hold your hotkey, speak Arabic, let go — read the English out loud in voice chat.",
         "اضغط زر التحدث مع الاستمرار، احكِ بالعربي، اترك الزر — واقرأ الجملة الإنجليزية بصوتك.",
-        """<ol><li>Open GameTalk from the launcher (<b>Start</b>). It runs in the system tray.</li>
+        """<ol><li>Open GameTalk. It runs in the system tray (hidden icons); closing the window keeps it running.</li>
 <li>In your game, <b>hold F9</b> (or your hotkey) and speak Arabic.</li>
 <li>Release the key. A moment later the English sentence appears on top of the game.</li>
 <li>Read it out loud in your normal game voice chat.</li></ol>
 <p>GameTalk never types into the game and never speaks for you. It only shows text.</p>
-<p>Tip: first time? Open <b>Settings → Microphone</b> and pick your real microphone.</p>""",
+<p>Tip: first time? Open the <b>Microphone</b> page and pick your real microphone.</p>""",
         """<ol><li>شغّل البرنامج من نافذة التحكم (<b>تشغيل</b>). بيشتغل كأيقونة جنب الساعة.</li>
 <li>داخل اللعبة <b>اضغط F9 مع الاستمرار</b> (أو الزر اللي اخترته) واحكِ بالعربي.</li>
 <li>اترك الزر، وبعد لحظة بتطلع الجملة بالإنجليزي فوق اللعبة.</li>
 <li>اقرأها بصوتك بالمايك العادي تبع اللعبة.</li></ol>
 <p>البرنامج ما بيكتب إشي بالعبة وما بيحكي عنك. بيعرض النص بس.</p>
-<p>نصيحة: أول مرة؟ افتح <b>الإعدادات ← المايكروفون</b> واختار المايك الحقيقي تبعك.</p>""",
+<p>نصيحة: أول مرة؟ افتح صفحة <b>المايكروفون</b> واختار المايك الحقيقي تبعك.</p>""",
     ),
     "general": (
         "General",
@@ -112,7 +112,7 @@ with the phrase list) recognise game terms. It is a hint — it never replaces w
 copy <b>Key 1</b> and <b>Location/Region</b>.</li>
 <li>Create resource → <b>Translator</b> → copy its Key and Region (<i>global</i> for a global
 resource).</li>
-<li>Paste them in Settings → Azure, press <b>Test connection</b>, then Save.</li></ol>
+<li>Paste them on the <b>Cloud keys</b> page and press <b>Test connection</b>.</li></ol>
 <p>Keys are encrypted with your Windows account and never written to logs. The free F0
 tiers are enough for voice chat.</p>
 <p><b>Phrase list</b> (Features page): sends your gaming vocabulary to Azure Speech so it
@@ -134,7 +134,7 @@ credit. Only the recognised text is sent to Google — never your voice.</p>""",
         """<ol><li>portal.azure.com ← إنشاء مورد ← <b>Speech</b> ← المفاتيح ونقطة النهاية ←
 انسخ <b>Key 1</b> و<b>المنطقة</b>.</li>
 <li>إنشاء مورد ← <b>Translator</b> ← انسخ المفتاح والمنطقة (<i>global</i> إذا المورد عالمي).</li>
-<li>الصقهم بالإعدادات ← Azure، اضغط <b>اختبار الاتصال</b>، وبعدين حفظ.</li></ol>
+<li>الصقهم بصفحة <b>مفاتيح السحابة</b> واضغط <b>اختبار الاتصال</b>.</li></ol>
 <p>المفاتيح بتنحفظ مشفّرة بحساب ويندوز تبعك وما بتنكتب بالسجلات. الخطط المجانية F0
 بتكفي للمحادثة الصوتية.</p>
 <p><b>قائمة العبارات</b> (صفحة الميزات): بتبعث كلمات الألعاب لـ Azure Speech عشان يفهم
@@ -280,12 +280,12 @@ some GPU/CPU while people speak — turn it off if your game needs every frame.<
         "المايك المفتوح",
         "No key needed: GameTalk notices when you start and stop talking.",
         "بدون زر: البرنامج بيعرف لحاله لما تبلش تحكي ولما توقف.",
-        """<p>Choose <b>Open mic</b> in Settings → Hotkeys. GameTalk listens all the time, cuts your
+        """<p>Choose <b>Open mic</b> on the Hotkeys page. GameTalk listens all the time, cuts your
 speech into sentences and translates each one. Your talk key becomes a <b>mute/unmute</b> switch.</p>
 <p>Noise that isn't speech (keyboard, game sounds) is ignored. The microphone stays open while
 this mode is on — audio stays in memory only and is never saved.</p>
 <p><b>Sensitivity</b>: higher catches quieter speech (and more noise).</p>""",
-        """<p>اختار <b>المايك المفتوح</b> من الإعدادات ← الأزرار. البرنامج بيسمع طول الوقت، بيقسم كلامك
+        """<p>اختار <b>المايك المفتوح</b> من صفحة الأزرار. البرنامج بيسمع طول الوقت، بيقسم كلامك
 لجمل وبيترجم كل جملة. زر التحدث بيصير زر <b>كتم/إلغاء كتم</b>.</p>
 <p>الضجة اللي مش كلام (الكيبورد، أصوات اللعبة) بتنتجاهل. المايك بيضل مفتوح وهاد الوضع شغال —
 الصوت بالذاكرة بس وما بينحفظ أبداً.</p>
@@ -314,7 +314,7 @@ yourself. <b>Esc</b> closes the box and returns to the game.</p>
         "Your own phrasebook of sentences you use, with practice cards.",
         "دفتر عبارات خاص فيك من الجمل اللي بتستعملها، مع بطاقات تدريب.",
         """<p>When learning mode is on, GameTalk keeps the English sentences you use (and the Arabic,
-when available) in a phrasebook on this PC. Open it from the tray or launcher:</p>
+when available) in a phrasebook on this PC. Open it from the tray or the main window:</p>
 <ul><li><b>My phrases</b>: most used first, with how to pronounce them. Add any to your quick
 phrases in one click.</li>
 <li><b>Practice</b>: see the Arabic, say the English out loud, then reveal to check. Mark "I knew
@@ -322,7 +322,7 @@ it" and the card moves back.</li></ul>
 <p>Privacy: this is the only feature that saves what you said. It's off by default, never
 uploaded, and you can clear it any time.</p>""",
         """<p>لما وضع التعلّم مفعّل، البرنامج بيحفظ الجمل الإنجليزية اللي بتستعملها (والعربي إذا موجود)
-بدفتر على جهازك. افتحه من الأيقونة أو لوحة التحكم:</p>
+بدفتر على جهازك. افتحه من الأيقونة أو من النافذة الرئيسية:</p>
 <ul><li><b>عباراتي</b>: الأكثر استعمالاً أول، مع طريقة النطق. ضيف أي وحدة للجمل الجاهزة بضغطة.</li>
 <li><b>التدريب</b>: بتشوف العربي، بتقول الإنجليزي بصوتك، وبعدين بتكشف الجواب. اضغط «عرفتها»
 والبطاقة بتتأخر.</li></ul>
@@ -336,9 +336,9 @@ uploaded, and you can clear it any time.</p>""",
         "صوت قصير لما يبلش التسجيل ولما يوقف.",
         """<p>A rising beep means "listening", a falling beep means "got it, translating", a low beep
 means something went wrong. Handy when the overlay is hidden (e.g. exclusive fullscreen). Set
-the volume in Settings → General.</p>""",
+the volume on the Settings page.</p>""",
         """<p>صوت طالع يعني «عم بسمعك»، صوت نازل يعني «وصلني، عم بترجم»، وصوت واطي يعني في مشكلة.
-مفيد لما النافذة مخفية (مثلاً ملء الشاشة الحصري). بتضبط الصوت من الإعدادات ← عام.</p>""",
+مفيد لما النافذة مخفية (مثلاً ملء الشاشة الحصري). بتضبط الصوت من صفحة الإعدادات.</p>""",
     ),
     "selftest": (
         "Self-test",
@@ -411,15 +411,15 @@ silence trimming for Azure, Azure phrase list and notifications.</p>
         """<ul><li><b>Overlay not visible in game</b>: switch the game to Borderless/Windowed.</li>
 <li><b>Hotkey doesn't work in one game</b>: that game runs as administrator — run GameTalk
 as administrator too.</li>
-<li><b>"No sound from the mic"</b>: pick your real microphone in Settings → Microphone.</li>
+<li><b>"No sound from the mic"</b>: pick your real microphone on the Microphone page.</li>
 <li><b>Wrong translations</b>: use a bigger Whisper model (medium), Azure mode, or add a
 correction rule.</li>
-<li><b>Azure errors</b>: Settings → Azure → Test connection shows what's wrong.</li></ul>""",
+<li><b>Azure errors</b>: Cloud keys page → Test connection shows what's wrong.</li></ul>""",
         """<ul><li><b>النافذة ما بتطلع باللعبة</b>: حط اللعبة على Borderless أو Windowed.</li>
 <li><b>الزر ما بيشتغل بلعبة معيّنة</b>: اللعبة شغالة كمسؤول — شغّل البرنامج كمسؤول كمان.</li>
-<li><b>«ما في صوت من المايك»</b>: اختار المايك الحقيقي من الإعدادات ← المايكروفون.</li>
+<li><b>«ما في صوت من المايك»</b>: اختار المايك الحقيقي من صفحة المايكروفون.</li>
 <li><b>ترجمة غلط</b>: استعمل نموذج Whisper أكبر (medium)، أو وضع Azure، أو ضيف قاعدة تصحيح.</li>
-<li><b>أخطاء Azure</b>: الإعدادات ← Azure ← اختبار الاتصال بيوضحلك شو المشكلة.</li></ul>""",
+<li><b>أخطاء Azure</b>: صفحة مفاتيح السحابة ← اختبار الاتصال بيوضحلك شو المشكلة.</li></ul>""",
     ),
 }
 

@@ -24,10 +24,13 @@ ApplicationWindow {
     readonly property var navItems: [
         {icon: Icons.home, label: hub.t("Home")},
         {icon: Icons.engine, label: hub.t("Engines")},
+        {icon: Icons.mic, label: hub.t("Microphone")},
         {icon: Icons.toggles, label: hub.t("Features")},
         {icon: Icons.overlay, label: hub.t("Overlay")},
         {icon: Icons.users, label: hub.t("Teammates")},
         {icon: Icons.keyboard, label: hub.t("Hotkeys")},
+        {icon: Icons.bubble, label: hub.t("Phrases and words")},
+        {icon: Icons.target, label: hub.t("Profiles")},
         {icon: Icons.key, label: hub.t("Cloud keys")},
         {icon: Icons.sliders, label: hub.t("Settings")}
     ]
@@ -36,14 +39,14 @@ ApplicationWindow {
         target: hub
         function onToast(message, kind) { toast.show(message, kind) }
     }
-    Shortcut { sequences: ["Ctrl+1"]; onActivated: win.page = 0 }
-    Shortcut { sequences: ["Ctrl+2"]; onActivated: win.page = 1 }
-    Shortcut { sequences: ["Ctrl+3"]; onActivated: win.page = 2 }
-    Shortcut { sequences: ["Ctrl+4"]; onActivated: win.page = 3 }
-    Shortcut { sequences: ["Ctrl+5"]; onActivated: win.page = 4 }
-    Shortcut { sequences: ["Ctrl+6"]; onActivated: win.page = 5 }
-    Shortcut { sequences: ["Ctrl+7"]; onActivated: win.page = 6 }
-    Shortcut { sequences: ["Ctrl+8"]; onActivated: win.page = 7 }
+
+    Repeater {  // Ctrl+1 … Ctrl+9 jump between pages
+        model: 9
+        delegate: Item {
+            required property int index
+            Shortcut { sequences: ["Ctrl+" + (index + 1)]; onActivated: win.page = index }
+        }
+    }
 
     Item {
         id: shell
@@ -88,7 +91,7 @@ ApplicationWindow {
                     Item { width: 8 }
                     WinButton { icon: Icons.minus; onClicked: win.showMinimized() }
                     WinButton { icon: Icons.maximize; onClicked: win.maximized ? win.showNormal() : win.showMaximized() }
-                    WinButton { icon: Icons.close; danger: true; onClicked: win.close() }
+                    WinButton { icon: Icons.close; danger: true; tip: hub.t("Hide to the tray (GameTalk keeps running)"); onClicked: win.close() }
                 }
                 Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.border }
             }
@@ -156,7 +159,7 @@ ApplicationWindow {
                                         Behavior on color { ColorAnimation { duration: 150 } }
                                     }
                                     Rectangle {  // warning dot on Cloud keys when a chosen service lacks a key
-                                        visible: navItem.index === 6 && win.missingKey
+                                        visible: navItem.index === 9 && win.missingKey
                                         width: 7; height: 7; radius: 4
                                         color: Theme.warn
                                     }
@@ -233,12 +236,15 @@ ApplicationWindow {
                     clip: true
                     PageHost { index: 0; source: "HomePage.qml" }
                     PageHost { index: 1; source: "EnginesPage.qml" }
-                    PageHost { index: 2; source: "FeaturesPage.qml" }
-                    PageHost { index: 3; source: "OverlayPage.qml" }
-                    PageHost { index: 4; source: "TeammatesPage.qml" }
-                    PageHost { index: 5; source: "HotkeysPage.qml" }
-                    PageHost { index: 6; source: "KeysPage.qml" }
-                    PageHost { index: 7; source: "MorePage.qml" }
+                    PageHost { index: 2; source: "MicPage.qml" }
+                    PageHost { index: 3; source: "FeaturesPage.qml" }
+                    PageHost { index: 4; source: "OverlayPage.qml" }
+                    PageHost { index: 5; source: "TeammatesPage.qml" }
+                    PageHost { index: 6; source: "HotkeysPage.qml" }
+                    PageHost { index: 7; source: "PhrasesPage.qml" }
+                    PageHost { index: 8; source: "ProfilesPage.qml" }
+                    PageHost { index: 9; source: "KeysPage.qml" }
+                    PageHost { index: 10; source: "MorePage.qml" }
                     Toast { id: toast }
                 }
             }
@@ -292,6 +298,7 @@ ApplicationWindow {
         id: wb
         property string icon: ""
         property bool danger: false
+        property string tip: ""
         signal clicked()
         Layout.preferredWidth: 46
         Layout.fillHeight: true
@@ -305,13 +312,14 @@ ApplicationWindow {
             color: wm.containsMouse ? "#ffffff" : Theme.muted
         }
         MouseArea { id: wm; anchors.fill: parent; hoverEnabled: true; onClicked: wb.clicked() }
+        Tip { visible: wb.tip !== "" && wm.containsMouse; text: wb.tip }
     }
 
     component StatusPill: Rectangle {
         id: pill
         readonly property var st: hub.stats
-        readonly property string phase: !hub.running ? (hub.starting ? "starting" : "off")
-            : st.state === "disabled" ? "off" : st.loading ? "starting" : (st.phase || "idle")
+        readonly property string phase: st.state === "disabled" ? "off"
+            : st.loading ? "starting" : (st.phase || "idle")
         readonly property color tone: phase === "off" ? Theme.faint : phase === "recording" ? Theme.danger
             : phase === "idle" ? Theme.ok : Theme.accent
         implicitHeight: 26
@@ -336,8 +344,8 @@ ApplicationWindow {
                 }
             }
             Text {
-                text: pill.phase === "off" ? hub.t("Off")
-                    : pill.phase === "starting" ? hub.t("Starting…")
+                text: pill.phase === "off" ? hub.t("Paused")
+                    : pill.phase === "starting" ? hub.t("Loading…")
                     : pill.phase === "recording" ? hub.t("Listening…")
                     : pill.phase === "processing" ? hub.t("Translating…")
                     : hub.tf("Ready · {key}", {key: pill.st.hotkey || hub.config.profile.hotkey})

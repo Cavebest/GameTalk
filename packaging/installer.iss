@@ -4,7 +4,7 @@
 ; English + Arabic installer UI.
 
 #define AppName "GameTalk Translator"
-#define AppVersion "0.1.0"
+#define AppVersion "1.0.0"
 #define AppPublisher "Shkour Bashtawi"
 #define AppURL "https://github.com/ShkourBashtawi"
 #define AppExe "GameTalk.exe"

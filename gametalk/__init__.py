@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Shkour Bashtawi (github.com/ShkourBashtawi). MIT License.
 """GameTalk Translator: hold a hotkey, speak Arabic, read the English on an overlay."""
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __author__ = "Shkour Bashtawi"
 APP_NAME = "GameTalk Translator"
 AUTHOR = __author__

@@ -261,7 +261,7 @@ ApplicationWindow {
     readonly property bool missingKey: {
         var c = hub.config, p = c.profile
         return (p.speech_provider === "azure" && !(c.azure.speech_key && c.azure.speech_region))
-            || (p.speech_provider === "google" && !(c.google.api_key && c.google.project_id))
+            || (p.speech_provider === "google" && !(c.google.service_account && c.google.project_id))
             || (p.translation_provider === "azure" && !c.azure.translator_key)
             || (p.translation_provider === "google" && !c.google.api_key)
     }

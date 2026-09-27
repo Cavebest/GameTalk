@@ -50,6 +50,7 @@ SECRETS = {
     "azure.speech_key",
     "azure.translator_key",
     "google.api_key",
+    "google.service_account",
 }
 SECTIONS = ("profile", "overlay", "features", "teammates", "azure", "google")
 MODEL_NOTES = {
@@ -423,6 +424,34 @@ class Hub(QObject):
             s.active_profile = s.profiles[0].name
 
         self._edit(change, tr("Profile deleted"))
+
+    @Slot()
+    def loadServiceAccount(self) -> None:
+        """Pick the service-account .json from Google Cloud; it's stored encrypted (DPAPI)."""
+        from PySide6.QtWidgets import QFileDialog
+
+        path, _ = QFileDialog.getOpenFileName(
+            None, tr("Google service account file"), "", "JSON (*.json)"
+        )
+        if path:
+            self.loadServiceAccountFrom(path)
+
+    def loadServiceAccountFrom(self, path: str) -> bool:
+        from ..google import parse_service_account
+
+        try:
+            text = pathlib.Path(path).read_text(encoding="utf-8")
+            account = parse_service_account(text)
+        except (OSError, ValueError):
+            self.toast.emit(tr("That isn't a Google service account key file."), "error")
+            return False
+
+        def change(s):
+            s.google.service_account = protect(text)
+            if not s.google.project_id:
+                s.google.project_id = account["project_id"]
+
+        return self._edit(change, tr("Service account saved (encrypted)"))
 
     @Slot()
     def exportProfile(self) -> None:

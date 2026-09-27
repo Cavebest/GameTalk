@@ -20,6 +20,7 @@ dependencies = [
     "azure-cognitiveservices-speech>=1.40",  # only for Azure Speech phrase lists (2.4 MB)
     "cmudict>=1.0",  # pronunciation helper: offline English pronunciation dictionary (0.9 MB)
     "soundcard>=0.4",  # teammate subtitles: Windows loopback capture of the PC's output (44 KB)
+    "cryptography>=42",  # signs the Google service-account login for Chirp 3
     "sentencepiece>=0.2",  # tokenizer for the offline English->Arabic model (1 MB)
 ]
 

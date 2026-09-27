@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import base64
 import html
+import json
 import logging
 import time
 from dataclasses import dataclass
@@ -51,6 +52,8 @@ CHIRP_ARABIC = {
 # Our language codes -> Google's where they differ
 _CODES = {"zh-Hans": "zh-CN"}
 _STALE_CONNECTION_ERRORS = (httpx.ConnectError, httpx.RemoteProtocolError, httpx.ReadError)
+TOKEN_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
+TOKEN_URI = "https://oauth2.googleapis.com/token"
 
 
 class GoogleError(Exception):
@@ -64,6 +67,7 @@ class GoogleCredentials:
     model: str = "nmt"  # "nmt" | "llm"
     location: str = DEFAULT_LOCATION
     denoise: bool = True  # Chirp 3's built-in noise reduction (game sound in the mic)
+    service_account: str = ""  # service-account JSON (Chirp 3 doesn't take API keys)
 
     @property
     def has_key(self) -> bool:
@@ -71,7 +75,7 @@ class GoogleCredentials:
 
     @property
     def speech_ready(self) -> bool:
-        return self.has_key and bool(self.project_id)
+        return bool(self.service_account or self.api_key) and bool(self.project_id)
 
     @property
     def ready(self) -> bool:
@@ -87,7 +91,49 @@ class GoogleCredentials:
         return "nmt"
 
     def __repr__(self) -> str:  # never leak the key into logs/tracebacks
-        return f"GoogleCredentials(key={'set' if self.has_key else 'unset'}, model={self.model})"
+        return (
+            f"GoogleCredentials(key={'set' if self.has_key else 'unset'}, model={self.model}, "
+            f"service_account={'set' if self.service_account else 'unset'})"
+        )
+
+
+def parse_service_account(text: str) -> dict:
+    """The fields GameTalk needs from a service-account key file; ValueError if it isn't one."""
+    try:
+        data = json.loads(text)
+    except ValueError as e:
+        raise ValueError("not JSON") from e
+    if not isinstance(data, dict) or data.get("type") != "service_account":
+        raise ValueError("not a service account key")
+    for field in ("client_email", "private_key", "project_id"):
+        if not isinstance(data.get(field), str) or not data[field]:
+            raise ValueError(f"missing {field}")
+    return data
+
+
+def signed_jwt(account: dict, now: float | None = None) -> str:
+    """RS256 JWT asking Google for a one-hour access token (OAuth 2.0 JWT bearer grant)."""
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import padding
+
+    def b64(raw: bytes) -> str:
+        return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
+
+    iat = int(now if now is not None else time.time())
+    header = {"alg": "RS256", "typ": "JWT"}
+    if account.get("private_key_id"):
+        header["kid"] = account["private_key_id"]
+    claims = {
+        "iss": account["client_email"],
+        "scope": TOKEN_SCOPE,
+        "aud": account.get("token_uri") or TOKEN_URI,
+        "iat": iat,
+        "exp": iat + 3600,
+    }
+    signing_input = f"{b64(json.dumps(header).encode())}.{b64(json.dumps(claims).encode())}"
+    key = serialization.load_pem_private_key(account["private_key"].encode(), password=None)
+    signature = key.sign(signing_input.encode("ascii"), padding.PKCS1v15(), hashes.SHA256())
+    return f"{signing_input}.{b64(signature)}"
 
 
 def google_code(lang: str | None) -> str | None:
@@ -106,6 +152,7 @@ def billed_chars(creds: GoogleCredentials, source: str, output: str) -> int:
 class GoogleClient:
     def __init__(self, creds: GoogleCredentials, transport=None, timeout: float = 8.0):
         self.creds = creds
+        self._token = ("", 0.0)  # (access token, expires at) for the service account
         self._http = httpx.Client(
             timeout=httpx.Timeout(timeout, connect=4.0),
             transport=transport,
@@ -135,10 +182,43 @@ class GoogleClient:
             raise GoogleError("Google Translate sent an unexpected reply.") from e
         return html.unescape(str(out)).strip()
 
+    def _speech_headers(self) -> dict:
+        """Bearer token from the service account (cached ~1 h), or the API key."""
+        if not self.creds.service_account:
+            return {"X-goog-api-key": self.creds.api_key}
+        token, expires = self._token
+        if not token or time.time() > expires - 60:
+            try:
+                account = parse_service_account(self.creds.service_account)
+                assertion = signed_jwt(account)
+            except (ValueError, TypeError) as e:
+                raise GoogleError("Google Chirp 3: the service account file isn't valid.") from e
+            try:
+                r = self._http.post(
+                    account.get("token_uri") or TOKEN_URI,
+                    data={
+                        "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                        "assertion": assertion,
+                    },
+                )
+            except httpx.HTTPError as e:
+                raise GoogleError("Can't reach Google Chirp 3 — check your internet.") from e
+            if r.status_code != 200:
+                log.warning("Google token request refused: HTTP %s", r.status_code)
+                raise GoogleError("Google Chirp 3: the service account was refused.")
+            try:
+                body = r.json()
+                token = str(body["access_token"])
+                expires = time.time() + float(body.get("expires_in", 3600))
+            except (ValueError, KeyError, TypeError) as e:
+                raise GoogleError("Google Chirp 3 sent an unexpected reply.") from e
+            self._token = (token, expires)
+        return {"Authorization": f"Bearer {token}"}
+
     def recognize(self, audio, locale: str, phrases: tuple[str, ...] = ()) -> str:
         """Chirp 3: speech -> text in `locale`. Returns '' when nothing was said."""
-        if not self.creds.has_key:
-            raise GoogleError("Add your Google API key on the Cloud keys page.")
+        if not (self.creds.service_account or self.creds.has_key):
+            raise GoogleError("Load your Google service account file on the Cloud keys page.")
         if not self.creds.project_id:
             raise GoogleError("Google Chirp 3 needs your Google Cloud project ID.")
         from .azure import wav_bytes
@@ -161,7 +241,7 @@ class GoogleClient:
             f"https://{SPEECH_LOCATION}-speech.googleapis.com/v2/projects/{self.creds.project_id}"
             f"/locations/{SPEECH_LOCATION}/recognizers/_:recognize"
         )
-        r = self._post(url, body, "speech")
+        r = self._post(url, body, "speech", self._speech_headers())
         try:
             results = r.json().get("results", [])
             parts = [
@@ -173,10 +253,10 @@ class GoogleClient:
             raise GoogleError("Google Chirp 3 sent an unexpected reply.") from e
         return " ".join(p.strip() for p in parts if p.strip())
 
-    def _post(self, url: str, body: dict, service: str) -> httpx.Response:
+    def _post(self, url: str, body: dict, service: str, headers=None) -> httpx.Response:
         name = "Google Chirp 3" if service == "speech" else "Google Translate"
         t0 = time.perf_counter()
-        headers = {"X-goog-api-key": self.creds.api_key}
+        headers = headers or {"X-goog-api-key": self.creds.api_key}
         for attempt in (1, 2):
             try:
                 r = self._http.post(url, json=body, headers=headers)
@@ -197,7 +277,9 @@ class GoogleClient:
 
 def _speech_error(r: httpx.Response, low: str) -> str:
     if "api key" in low and ("not supported" in low or "expected oauth" in low):
-        return "Google Chirp 3 doesn't accept API keys for this project."
+        return "Google Chirp 3 needs a service account file, not an API key (Cloud keys page)."
+    if "permission" in low and r.status_code == 403:
+        return "Google Chirp 3: give the service account the “Cloud Speech Client” role."
     if "api key not valid" in low or "api_key_invalid" in low:
         return "Google Chirp 3: the API key isn't valid."
     if "billing" in low:
@@ -248,17 +330,18 @@ def check_connection(
 ) -> list[tuple[bool, str]]:
     """Translate one Arabic word (and, with speech=True, send half a second of silence to
     Chirp 3) to prove the key, project and models work."""
-    if not creds.has_key:
+    if not creds.has_key and not (speech and creds.service_account):
         return [(False, "Google Translate: no API key entered")]
     client = GoogleClient(creds, transport=transport)
     results: list[tuple[bool, str]] = []
     try:
-        try:
-            out = client.translate("مرحبا", "ar", "en")
-            name = "Google Translation LLM" if creds.model == "llm" else "Google Translate"
-            results.append((True, f"{name}: connected (مرحبا → {out})"))
-        except GoogleError as e:
-            results.append((False, str(e)))
+        if creds.has_key:
+            try:
+                out = client.translate("مرحبا", "ar", "en")
+                name = "Google Translation LLM" if creds.model == "llm" else "Google Translate"
+                results.append((True, f"{name}: connected (مرحبا → {out})"))
+            except GoogleError as e:
+                results.append((False, str(e)))
         if speech:
             import numpy as np
 

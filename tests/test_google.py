@@ -280,7 +280,7 @@ def test_chirp_locale_fallback_and_options():
 @pytest.mark.parametrize(
     ("status", "message", "expected"),
     [
-        (401, "API keys are not supported by this API. Expected OAuth2 access token", "API keys"),
+        (401, "API keys are not supported by this API. Expected OAuth2 access token", "service"),
         (403, "Cloud Speech-to-Text API has not been used in project 1", "enable"),
         (400, "The language ar-XX is not supported", "dialect"),
     ],
@@ -334,3 +334,111 @@ def test_check_connection_can_include_chirp():
 
     out = check_connection(CHIRP, transport=httpx.MockTransport(handler), speech=True)
     assert out[0][0] and out[1][0] and out[1][1].startswith("Google Chirp 3: connected (")
+
+
+# ---------------------------------------------------------------- Chirp 3 service-account login
+
+
+def _service_account():
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    pem = key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    ).decode()
+    account = {
+        "type": "service_account",
+        "project_id": "cogent-test-1",
+        "private_key_id": "abc",
+        "private_key": pem,
+        "client_email": "gametalk@cogent-test-1.iam.gserviceaccount.com",
+        "token_uri": "https://oauth2.googleapis.com/token",
+    }
+    return key, json.dumps(account)
+
+
+def test_signed_jwt_is_a_valid_rs256_token():
+    import base64
+
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import padding
+
+    from gametalk.google import parse_service_account, signed_jwt
+
+    key, text = _service_account()
+    token = signed_jwt(parse_service_account(text), now=1000)
+    head, claims, sig = token.split(".")
+
+    def unb64(part):
+        return base64.urlsafe_b64decode(part + "=" * (-len(part) % 4))
+
+    assert json.loads(unb64(head)) == {"alg": "RS256", "typ": "JWT", "kid": "abc"}
+    c = json.loads(unb64(claims))
+    assert c["iss"].startswith("gametalk@") and c["iat"] == 1000 and c["exp"] == 4600
+    assert c["scope"] == "https://www.googleapis.com/auth/cloud-platform"
+    key.public_key().verify(  # raises if the signature is wrong
+        unb64(sig), f"{head}.{claims}".encode(), padding.PKCS1v15(), hashes.SHA256()
+    )
+
+
+def test_bad_service_account_files_are_rejected():
+    from gametalk.google import parse_service_account
+
+    for bad in ("nope", '{"type": "authorized_user"}', '{"type": "service_account"}'):
+        with pytest.raises(ValueError):
+            parse_service_account(bad)
+
+
+def test_chirp_uses_a_cached_bearer_token_from_the_service_account():
+    _, text = _service_account()
+    creds = GoogleCredentials(project_id="cogent-test-1", service_account=text)
+    calls = []
+
+    def handler(request):
+        calls.append(str(request.url))
+        if "oauth2" in str(request.url):
+            assert b"jwt-bearer" in request.content
+            return httpx.Response(200, json={"access_token": "tok-1", "expires_in": 3600})
+        assert request.headers["Authorization"] == "Bearer tok-1"
+        assert "X-goog-api-key" not in request.headers
+        return httpx.Response(200, json={"results": [{"alternatives": [{"transcript": "هلق"}]}]})
+
+    c = client_with(handler, creds)
+    assert c.recognize(np.zeros(160, np.float32), "ar-JO") == "هلق"
+    assert c.recognize(np.zeros(160, np.float32), "ar-JO") == "هلق"
+    assert sum("oauth2" in u for u in calls) == 1  # one login for many sentences
+
+
+def test_refused_service_account_is_explained():
+    _, text = _service_account()
+    creds = GoogleCredentials(project_id="p", service_account=text)
+    c = client_with(lambda r: httpx.Response(400, json={"error": "invalid_grant"}), creds)
+    with pytest.raises(GoogleError, match="refused"):
+        c.recognize(np.zeros(160, np.float32), "ar-JO")
+
+
+def test_hub_loads_the_service_account_encrypted(qapp, tmp_path):
+    from factory import make_controller
+
+    from gametalk.credentials import unprotect
+    from gametalk.hub.backend import Hub
+
+    _, text = _service_account()
+    path = tmp_path / "sa.json"
+    path.write_text(text, encoding="utf-8")
+    c = make_controller(tmp_path)
+    hub = Hub(c, poll=False)
+    assert hub.loadServiceAccountFrom(str(path))
+    raw = c.store.path.read_text(encoding="utf-8")
+    assert "PRIVATE KEY" not in raw  # only DPAPI ciphertext on disk
+    assert unprotect(c.settings.google.service_account) == text
+    assert c.settings.google.project_id == "cogent-test-1"  # filled in from the file
+    assert hub.config["google"]["service_account"] is True
+    assert c.google_credentials().speech_ready
+    bad = tmp_path / "bad.json"
+    bad.write_text("{}", encoding="utf-8")
+    assert not hub.loadServiceAccountFrom(str(bad))
+    hub.close()

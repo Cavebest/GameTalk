@@ -290,8 +290,11 @@ One *Azure AI services* multi-service resource also works: use the same key and 
 4. In GameTalk, open **Cloud keys**, paste the key, choose **Standard** or **Translation LLM**,
    and press **Test Google**. The LLM also needs your **Project ID**, which is on the Cloud
    console home page.
-5. **Google Chirp 3 (speech → text):** also enable the **Cloud Speech-to-Text API**, enter your
-   **Project ID**, then pick *Google Chirp 3* on **Engines**. It costs about $0.016 per minute of
+5. **Google Chirp 3 (speech → text):** enable the **Cloud Speech-to-Text API** too. Chirp 3
+   doesn't take API keys, so create a login file: **IAM & Admin → Service Accounts → Create
+   service account** → role **Cloud Speech Client** → open it → **Keys → Add key → JSON**. On
+   **Cloud keys**, press **Load .json file…** (it's stored encrypted, and the Project ID fills in
+   by itself), then pick *Google Chirp 3* on **Engines**. It costs about $0.016 per minute of
    speech (no free minutes; new Google Cloud accounts get trial credit). The *Noise removal*
    switch strips game sound from your mic. **Home** shows how long each stage took (speech →
    text, translation, total), so you can compare engines.
@@ -725,8 +728,11 @@ NVIDIA إذا لقاه)، وبعدها بيفتح النافذة الرئيسي�
 4. بـ GameTalk افتح **مفاتيح السحابة**، الصق المفتاح، اختار **العادي** أو **Translation LLM**،
    واضغط **اختبار Google**. موديل LLM بده كمان **رقم المشروع (Project ID)**، وتلاقيه بالصفحة
    الرئيسية للـ Cloud console.
-5. **Google Chirp 3 (الكلام ← نص):** فعّل كمان **Cloud Speech-to-Text API**، حط **رقم المشروع**،
-   وبعدين اختار *Google Chirp 3* من صفحة **المحركات**. سعره تقريباً 0.016$ لكل دقيقة كلام (ما في
+5. **Google Chirp 3 (الكلام ← نص):** فعّل كمان **Cloud Speech-to-Text API**. هاد الموديل ما بيقبل
+   مفتاح API، فبدك ملف دخول: **IAM & Admin ← Service Accounts ← Create service account** ←
+   صلاحية **Cloud Speech Client** ← افتحه ← **Keys ← Add key ← JSON**. بصفحة **مفاتيح السحابة**
+   اضغط **تحميل ملف ‎.json‎** (بينحفظ مشفّر، ورقم المشروع بيتعبّى لحاله)، وبعدين اختار
+   *Google Chirp 3* من صفحة **المحركات**. سعره تقريباً 0.016$ لكل دقيقة كلام (ما في
    دقائق مجانية، بس حسابات Google Cloud الجديدة بتاخذ رصيد تجربة). مفتاح *إزالة الضجيج* بيشيل صوت
    اللعبة من المايك. والصفحة **الرئيسية** بتوريك قديش أخذت كل مرحلة (كلام ← نص، ترجمة، المجموع)،
    لتقارن بين المحركات.

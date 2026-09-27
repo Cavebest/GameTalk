@@ -118,13 +118,55 @@ ScrollPage {
             value: page.cfg.google.project_id
             hint: hub.t("e.g. my-project-123456")
         }
+        ColumnLayout {  // Chirp 3 logs in with a service account, not the API key
+            Layout.fillWidth: true
+            visible: page.cfg.profile.speech_provider === "google" || page.cfg.google.service_account
+            spacing: 8
+            Caption { text: hub.t("Google Chirp 3 login"); Layout.topMargin: 6 }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                Text { text: hub.t("Service account"); color: Theme.textSoft; font.pixelSize: 13; Layout.preferredWidth: 150 }
+                Rectangle {
+                    visible: page.cfg.google.service_account
+                    Layout.fillWidth: true
+                    implicitHeight: 38
+                    radius: 8
+                    color: Theme.okSoft
+                    border.width: 1
+                    border.color: Theme.okBorder
+                    RowLayout {
+                        anchors { fill: parent; leftMargin: 12; rightMargin: 6 }
+                        Icon { path: Icons.lock; size: 15; color: Theme.ok }
+                        Text { text: hub.t("Saved and encrypted"); color: Theme.ok; font.pixelSize: 12; font.weight: Font.DemiBold; Layout.fillWidth: true }
+                        Btn { text: hub.t("Remove"); small: true; kind: "subtle"; icon: Icons.trash; onClicked: hub.clearSecret("google.service_account") }
+                    }
+                }
+                Btn {
+                    visible: !page.cfg.google.service_account
+                    text: hub.t("Load .json file…")
+                    icon: Icons.upload
+                    kind: "primary"
+                    small: true
+                    onClicked: hub.loadServiceAccount()
+                }
+                Item { visible: !page.cfg.google.service_account; Layout.fillWidth: true }
+            }
+            Text {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                color: Theme.muted
+                font.pixelSize: 12
+                text: hub.t("Google Cloud → IAM & Admin → Service Accounts → Create service account → role “Cloud Speech Client” → open it → Keys → Add key → JSON. Load the downloaded file here. Keep it private: it's like a password.")
+            }
+        }
         RowLayout {
             Layout.fillWidth: true
             Btn {
                 text: hub.t("Test Google")
                 icon: Icons.pulse
                 busy: page.googleBusy
-                enabled: page.cfg.google.api_key
+                enabled: page.cfg.google.api_key || page.cfg.google.service_account
                 onClicked: { page.googleBusy = true; page.googleResult = []; hub.testGoogle() }
             }
             Item { Layout.fillWidth: true }

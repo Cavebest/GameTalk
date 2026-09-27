@@ -232,7 +232,7 @@ class Controller(QObject):
     def google_credentials(self) -> GoogleCredentials:
         """Decrypted Google key (cached until the stored values change)."""
         g = self.settings.google
-        key = (g.api_key, g.project_id, g.model, g.location, g.denoise)
+        key = (g.api_key, g.project_id, g.model, g.location, g.denoise, g.service_account)
         if self._google_cache is None or self._google_cache[0] != key:
             creds = GoogleCredentials(
                 api_key=unprotect(g.api_key),
@@ -240,6 +240,7 @@ class Controller(QObject):
                 model=g.model,
                 location=g.location,
                 denoise=g.denoise,
+                service_account=unprotect(g.service_account),
             )
             self._google_cache = (key, creds)
         return self._google_cache[1]
@@ -256,7 +257,7 @@ class Controller(QObject):
         """'' if the active profile's cloud services are configured, else what to fix."""
         p = self.profile
         if p.speech_provider == GOOGLE and not self.google_credentials().speech_ready:
-            return tr("Add your Google API key and project ID on the Cloud keys page.")
+            return tr("Load your Google service account file on the Cloud keys page.")
         if p.translation_provider == GOOGLE and (problem := self._google_problem()):
             return problem
         if not p.uses_azure:

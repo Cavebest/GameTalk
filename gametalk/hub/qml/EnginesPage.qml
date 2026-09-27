@@ -17,7 +17,7 @@ ScrollPage {
     readonly property bool cloudTranslate: tp === "azure" || tp === "google"
     readonly property string missing: {
         if (azureSpeech && !(cfg.azure.speech_key && cfg.azure.speech_region)) return hub.t("Azure Speech needs its key and region.")
-        if (googleSpeech && !(cfg.google.api_key && cfg.google.project_id)) return hub.t("Google Chirp 3 needs your Google API key and project ID.")
+        if (googleSpeech && !(cfg.google.service_account && cfg.google.project_id)) return hub.t("Google Chirp 3 needs your Google service account file.")
         if (tp === "azure" && !cfg.azure.translator_key) return hub.t("Azure Translator needs its key.")
         if (tp === "google" && !cfg.google.api_key) return hub.t("Google Translate needs an API key.")
         if (tp === "google" && cfg.google.model === "llm" && !cfg.google.project_id) return hub.t("The Translation LLM needs your Google Cloud project ID.")

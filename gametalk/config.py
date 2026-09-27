@@ -293,6 +293,7 @@ class GoogleSettings:
     model: str = "nmt"  # "nmt" | "llm"
     location: str = "us-central1"
     denoise: bool = True  # Chirp 3 noise reduction: removes game sound from your mic
+    service_account: str = ""  # DPAPI-encrypted service-account JSON (for Chirp 3)
 
 
 @dataclass

@@ -7,6 +7,7 @@ teammate subtitles, …) is switched on/off from Settings.features and applied h
 
 from __future__ import annotations
 
+import json
 import logging
 import time
 from collections import deque
@@ -134,6 +135,9 @@ class Controller(QObject):
         self.pending = 0  # push-to-talk / test jobs sent to the worker and not answered yet
         self.team_pending = 0  # teammate-subtitle jobs in flight (at most one)
         self.history: deque[HistoryItem] = deque(maxlen=settings.features.history_size)
+        # Live numbers for the hub window (timings and counts only).
+        self.latencies: deque[float] = deque(maxlen=24)
+        self._today = ("", 0)  # (date, translations that day)
         self._tag = "ptt"  # tag of the recording in progress
         self._ptt_source = "key"  # "key" | "pad": which device started the recording
         self._settings_dialog = None
@@ -576,6 +580,10 @@ class Controller(QObject):
     def _after_translation(self, result: TranslationResult) -> None:
         """Clipboard, phrasebook and quick-phrase suggestions for a finished translation."""
         f = self.features
+        if result.seconds:
+            self.latencies.append(round(result.seconds, 3))
+        day = time.strftime("%Y-%m-%d")
+        self._today = (day, (self._today[1] if self._today[0] == day else 0) + 1)
         if f.copy_to_clipboard:
             from PySide6.QtGui import QGuiApplication
 
@@ -942,10 +950,55 @@ class Controller(QObject):
         state = "ready" if self.settings.enabled else "disabled"
         return f"{state}|{p.name}|{p.hotkey}|{p.mode}|{engine}"
 
+    def stats(self) -> dict:
+        """Live state for the hub window. The last sentence is included only while history is
+        on (it's on screen anyway); nothing here is ever written to disk or logs."""
+        p = self.profile
+        mine = (
+            [h for h in self.history if h.kind != "team"] if self.features.history_enabled else []
+        )
+        last = mine[-1] if mine else None
+        u = self.usage.current
+        return {
+            "state": "ready" if self.settings.enabled else "disabled",
+            "phase": "recording" if self.recording else "processing" if self.pending else "idle",
+            "profile": p.name,
+            "hotkey": p.hotkey,
+            "mode": p.hotkey_mode,
+            "speech": p.speech_provider,
+            "translation": p.translation_provider,
+            "engine": self.speech.summary if self.speech.loaded else "",
+            "loading": self.speech.loading,
+            "error": "" if self.speech.loaded else self.speech.last_error,
+            "last": {"text": last.text, "extra": last.extra, "at": last.when} if last else None,
+            "latencies": list(self.latencies),
+            "today": self._today[1] if self._today[0] == time.strftime("%Y-%m-%d") else 0,
+            "usage": {
+                "speech": round(u.speech_fraction, 4),
+                "translator": round(u.translator_fraction, 4),
+                "google": round(u.google_fraction, 4),
+            },
+            "team": self.settings.teammates.enabled,
+        }
+
+    def preview_overlay(self) -> None:
+        text = "Wait for me, I'm coming."  # an English sample, like a real translation
+        extra = ""
+        if self.features.pronunciation_enabled:
+            from .pronounce import to_arabic
+
+            extra = to_arabic(text)
+        self.overlay.show_result(text, extra)
+
     def handle_command(self, command: str) -> str:
         """IPC entry point (see ipc.py). Runs on the main thread."""
         if command == "status":
             return self.status_text()
+        if command == "stats":
+            return json.dumps(self.stats(), ensure_ascii=False)
+        if command == "preview":
+            QTimer.singleShot(0, self.preview_overlay)
+            return "ok"
         if command.startswith("settings"):
             _, _, tab = command.partition(":")
             QTimer.singleShot(0, lambda: self.open_settings(tab or None))

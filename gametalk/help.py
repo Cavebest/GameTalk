@@ -445,10 +445,10 @@ class HelpDialog(QDialog):
         self.setWindowTitle(tr("{app} — Help", app=tr(APP_NAME)))
         theme.apply(
             self,
-            "QListWidget { background: #161a22; border: 1px solid #232937; border-radius: 8px;"
+            "QListWidget { background: #161619; border: 1px solid #222227; border-radius: 8px;"
             " padding: 4px; } QListWidget::item { padding: 7px 10px; border-radius: 6px; }"
-            " QListWidget::item:selected { background: #0c4a5e; color: white; }"
-            " QTextBrowser { background: #161a22; border: 1px solid #232937;"
+            " QListWidget::item:selected { background: #3a1a0e; color: white; }"
+            " QTextBrowser { background: #161619; border: 1px solid #222227;"
             " border-radius: 8px; padding: 10px; font-size: 11pt; }",
         )
         self.resize(820, 560)
@@ -481,5 +481,5 @@ class HelpDialog(QDialog):
         direction = "rtl" if language() == "ar" else "ltr"
         self.view.setHtml(
             f'<div dir="{direction}"><h2>{title(key)}</h2>'
-            f'<p style="color:#8b93a3">{summary(key)}</p>{body(key)}</div>'
+            f'<p style="color:#8c8c96">{summary(key)}</p>{body(key)}</div>'
         )

@@ -296,17 +296,17 @@ class SettingsDialog(QDialog):
             self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         theme.apply(
             self,
-            "QListWidget#nav { background: #0f1218; border: none; outline: 0; }"
+            "QListWidget#nav { background: #0c0c0e; border: none; outline: 0; }"
             " QListWidget#nav::item { padding: 6px 10px; border-radius: 6px; margin: 1px 4px; }"
-            " QListWidget#nav::item:selected { background: #0c4a5e; color: white; }"
-            " QListWidget#nav::item:hover:!selected { background: #1d2330; }"
+            " QListWidget#nav::item:selected { background: #3a1a0e; color: white; }"
+            " QListWidget#nav::item:hover:!selected { background: #1d1d22; }"
             " QLabel#pagetitle { font-size: 14pt; font-weight: 600; }"
-            " QFrame#summary { background: #10151d; border: 1px solid #232937;"
+            " QFrame#summary { background: #111114; border: 1px solid #222227;"
             " border-radius: 8px; }"
             " QPushButton#helpbtn { padding: 2px 9px; border-radius: 11px; font-weight: 700; }"
-            " QTableWidget { background: #1d2330; gridline-color: #2b3345;"
-            " border: 1px solid #2b3345; border-radius: 6px; }"
-            " QHeaderView::section { background: #161a22; color: #8b93a3; border: none;"
+            " QTableWidget { background: #1d1d22; gridline-color: #27272d;"
+            " border: 1px solid #27272d; border-radius: 6px; }"
+            " QHeaderView::section { background: #161619; color: #8c8c96; border: none;"
             " padding: 5px; }",
         )
 

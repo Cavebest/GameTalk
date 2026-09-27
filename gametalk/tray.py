@@ -28,8 +28,8 @@ def make_icon(enabled: bool = True) -> QIcon:
         pm.fill(Qt.GlobalColor.transparent)
         p = QPainter(pm)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        bg = QColor(14, 18, 26) if enabled else QColor(70, 70, 76)
-        fg = QColor(56, 189, 248) if enabled else QColor(170, 170, 176)
+        bg = QColor(12, 12, 14) if enabled else QColor(70, 70, 76)
+        fg = QColor(255, 90, 31) if enabled else QColor(170, 170, 176)
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(bg)
         p.drawRoundedRect(QRectF(0, 0, size, size), size * 0.22, size * 0.22)
@@ -44,7 +44,7 @@ def make_icon(enabled: bool = True) -> QIcon:
             (size * 0.48, bubble.bottom() - 1),
         ]
         p.drawPolygon(QPolygonF([QPointF(x, y) for x, y in tail]))
-        p.setPen(bg)
+        p.setPen(QColor(255, 255, 255) if enabled else bg)
         f = QFont("Segoe UI", 1)
         f.setPixelSize(max(6, int(size * 0.30)))
         f.setBold(True)

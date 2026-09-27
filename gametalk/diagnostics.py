@@ -371,7 +371,7 @@ class DiagnosticsDialog(QDialog):
             self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         theme.apply(
             self,
-            "QTextBrowser { background: #161a22; border: 1px solid #232937; border-radius: 8px;"
+            "QTextBrowser { background: #161619; border: 1px solid #222227; border-radius: 8px;"
             " padding: 8px; font-size: 10.5pt; }",
         )
         self.resize(640, 560)
@@ -440,9 +440,9 @@ class DiagnosticsDialog(QDialog):
         direction = "rtl" if is_rtl() else "ltr"
         rows = []
         for ch in checks:
-            fix = f'<br><span style="color:#38bdf8">→ {ch.fix}</span>' if ch.fix else ""
+            fix = f'<br><span style="color:#ff5a1f">→ {ch.fix}</span>' if ch.fix else ""
             rows.append(
                 f"<p>{ICONS[ch.status]} <b>{ch.title}</b><br>"
-                f'<span style="color:#aab2c0">{ch.detail}</span>{fix}</p>'
+                f'<span style="color:#c6c6cd">{ch.detail}</span>{fix}</p>'
             )
         self.view.setHtml(f'<div dir="{direction}">' + "".join(rows) + "</div>")

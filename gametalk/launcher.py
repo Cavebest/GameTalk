@@ -71,13 +71,13 @@ FEATURE_NAMES = [
 LAUNCHER_STYLE = """
 QPushButton { padding: 9px 12px; }
 QLabel#step { font-weight: 600; }
-QLabel#stepnum { background: #0e7490; color: white; border-radius: 9px; font-weight: 700;
+QLabel#stepnum { background: #d9480f; color: white; border-radius: 9px; font-weight: 700;
                  min-width: 18px; max-width: 18px; min-height: 18px; max-height: 18px; }
-QLabel#flow { background: #10151d; border: 1px solid #232937; border-radius: 8px; padding: 8px; }
-QLabel#private { color: #22c55e; }
+QLabel#flow { background: #111114; border: 1px solid #222227; border-radius: 8px; padding: 8px; }
+QLabel#private { color: #3ddc84; }
 QLabel#cloud { color: #ffb020; }
 QPushButton#seg { padding: 8px 10px; text-align: left; }
-QPushButton#seg:checked { background: #0c4a5e; border: 1px solid #38bdf8; font-weight: 600; }
+QPushButton#seg:checked { background: #3a1a0e; border: 1px solid #ff5a1f; font-weight: 600; }
 """
 
 
@@ -186,7 +186,7 @@ def credit_label() -> QLabel:
     """'© 2026 Shkour Bashtawi · github.com/ShkourBashtawi' with a clickable link."""
     link = AUTHOR_URL.removeprefix("https://")
     label = QLabel(
-        f'{COPYRIGHT} · <a href="{AUTHOR_URL}" style="color:#38bdf8; text-decoration:none">'
+        f'{COPYRIGHT} · <a href="{AUTHOR_URL}" style="color:#ff5a1f; text-decoration:none">'
         f"{link}</a>"
     )
     label.setObjectName("muted")
@@ -430,7 +430,7 @@ class Launcher(QWidget):
             self.start_btn.setObjectName("primary")
         else:
             ok = info["state"] == "ready"
-            self.dot.setStyleSheet(f"color: {'#22c55e' if ok else '#ffb020'}")
+            self.dot.setStyleSheet(f"color: {'#3ddc84' if ok else '#ffb020'}")
             if ok:
                 state = tr("Running — hold {key} to talk", key=info["hotkey"])
             else:
@@ -599,6 +599,11 @@ class Launcher(QWidget):
 
 
 def main() -> int:
+    """Open the main window: the new hub, or the classic launcher with --classic."""
+    if "--classic" not in sys.argv[1:]:
+        from gametalk.hub import main as hub_main
+
+        return hub_main()
     if sys.platform == "win32":
         # Own taskbar identity so Windows shows our icon rather than Python's.
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("GameTalk.Launcher")
@@ -606,6 +611,11 @@ def main() -> int:
     app = QApplication(sys.argv[:1])
     app.setApplicationName(f"{APP_NAME} Launcher")
     set_language(ConfigStore().load().features.ui_language)
+    return run_classic(app)
+
+
+def run_classic(app: QApplication) -> int:
+    """The original widget launcher (also the fallback if Qt Quick can't load)."""
     apply_layout_direction(app)
     holder: dict[str, Launcher] = {}
 

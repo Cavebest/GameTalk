@@ -352,7 +352,7 @@ class OverlayStyle:
     font_family: str = "Segoe UI"
     text_color: str = "#f5f7fa"
     background_color: str = "#0c0e14"
-    accent_color: str = "#38bdf8"
+    accent_color: str = "#ff5a1f"
     text_outline: bool = False
     corner_radius: int = 12
     animation: bool = True
@@ -403,7 +403,7 @@ def validate(settings: Settings) -> Settings:
     for attr, default in (
         ("text_color", "#f5f7fa"),
         ("background_color", "#0c0e14"),
-        ("accent_color", "#38bdf8"),
+        ("accent_color", "#ff5a1f"),
     ):
         if not _is_hex_color(getattr(o, attr)):
             setattr(o, attr, default)

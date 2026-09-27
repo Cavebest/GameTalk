@@ -36,7 +36,7 @@ class QuickTextBox(QDialog):
         )
         theme.apply(
             self,
-            "QDialog { background: #0f1218; border: 1px solid #38bdf8; border-radius: 10px; }"
+            "QDialog { background: #0c0c0e; border: 1px solid #ff5a1f; border-radius: 10px; }"
             " QLineEdit { font-size: 13pt; padding: 8px; }"
             " QLabel#result { font-size: 13pt; font-weight: 600; color: #f5f7fa; }",
         )

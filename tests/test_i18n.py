@@ -5,6 +5,7 @@ import re
 import pytest
 
 from gametalk import config, google, help, i18n, launcher, settings_dialog
+from gametalk.hub import backend
 from gametalk.i18n_ar import AR
 
 PKG = pathlib.Path(__file__).resolve().parents[1] / "gametalk"
@@ -12,13 +13,24 @@ PKG = pathlib.Path(__file__).resolve().parents[1] / "gametalk"
 
 def _tr_literals() -> set[str]:
     found = set()
-    for f in PKG.glob("*.py"):
+    for f in [*PKG.glob("*.py"), *PKG.glob("hub/*.py")]:
         tree = ast.parse(f.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "tr" and node.args:
                 arg = node.args[0]
                 if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
                     found.add(arg.value)
+    return found
+
+
+QML_TEXT = re.compile(r'hub\.tf?\(\s*"((?:[^"\\]|\\.)*)"')
+
+
+def qml_strings() -> set[str]:
+    """Every hub.t("…") / hub.tf("…", …) literal in the Qt Quick interface."""
+    found = set()
+    for f in (PKG / "hub" / "qml").glob("*.qml"):
+        found.update(QML_TEXT.findall(f.read_text(encoding="utf-8")))
     return found
 
 
@@ -34,6 +46,8 @@ def _labels() -> set[str]:
         config.TEAM_TRANSLATORS,
         config.QUICK_TEXT_TRANSLATORS,
         google.MODELS,
+        backend.MODEL_NOTES,
+        backend.HOTKEY_MODE_LABELS,
         settings_dialog.DEVICE_LABELS,
         settings_dialog.MONITOR_LABELS,
         settings_dialog.POSITION_LABELS,
@@ -57,9 +71,14 @@ def _error_messages() -> set[str]:
     return {m for m in out if m.endswith((".", "…"))}
 
 
-@pytest.mark.parametrize("group", ["tr() calls", "labels", "errors"])
+@pytest.mark.parametrize("group", ["tr() calls", "labels", "errors", "hub"])
 def test_every_ui_string_has_an_arabic_translation(group):
-    strings = {"tr() calls": _tr_literals, "labels": _labels, "errors": _error_messages}[group]()
+    strings = {
+        "tr() calls": _tr_literals,
+        "labels": _labels,
+        "errors": _error_messages,
+        "hub": qml_strings,
+    }[group]()
     missing = sorted(s for s in strings if s not in AR)
     assert not missing, f"{len(missing)} strings without Arabic: {missing[:10]}"
 

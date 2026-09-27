@@ -53,13 +53,13 @@ class LearnDialog(QDialog):
             self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         theme.apply(
             self,
-            " QTableWidget { background: #1d2330; gridline-color: #2b3345;"
-            " border: 1px solid #2b3345; border-radius: 6px; }"
-            " QHeaderView::section { background: #161a22; color: #8b93a3; border: none;"
+            " QTableWidget { background: #1d1d22; gridline-color: #27272d;"
+            " border: 1px solid #27272d; border-radius: 6px; }"
+            " QHeaderView::section { background: #161619; color: #8c8c96; border: none;"
             " padding: 5px; }"
             " QLabel#card { font-size: 20pt; font-weight: 600; padding: 18px; }"
-            " QLabel#answer { font-size: 17pt; color: #38bdf8; }"
-            " QFrame#cardbox { background: #161a22; border: 1px solid #232937;"
+            " QLabel#answer { font-size: 17pt; color: #ff5a1f; }"
+            " QFrame#cardbox { background: #161619; border: 1px solid #222227;"
             " border-radius: 10px; }",
         )
         self.resize(760, 520)
